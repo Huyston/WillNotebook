@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>WillNotebook</title>
+<link rel="icon" href="favicon.png">
+<link href="css/menu.css" rel="stylesheet" type="text/css" />
+<script src="jquery-3.1.1.min.js"></script>
+<script src="brython.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: { inlineMath: [['$','$'],['\\(','\\)']] },
+    TeX: {equationNumbers: {autoNumber: "all"}},
+    CommonHTML: { linebreaks: { automatic: true,width: "650px" }},
+    "HTML-CSS": { linebreaks: { automatic: true,width: "650px" }},
+    SVG: { linebreaks: { automatic:true,width: "650px"}}
+  });
+</script>
+<script type="text/javascript">
+    math = {reNumber:function(){
+    MathJax.Hub.Queue(
+      ["resetEquationNumbers",MathJax.InputJax.TeX],
+      ["PreProcess",MathJax.Hub],
+      ["Reprocess",MathJax.Hub]
+      );}}
+</script>
+<script type='text/javascript' asyn src='MathJax-master/MathJax.js?config=TeX-MML-AM_CHTML'></script>
+<script>
+function uploadFile(cell,file,label,source,caption){
+    var url = 'http://127.0.0.1:8080/image';
+    var xhr = new XMLHttpRequest();
+    var fd = new FormData();
+    xhr.open("POST", url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            // Every thing ok, file uploaded
+            receiveImg(xhr.responseText); // handle response.
+        }
+    };
+    fd.append("cell", cell);
+    fd.append("img", file);
+    fd.append("label", label);
+    fd.append("source", source);
+    fd.append("caption", caption);
+    xhr.send(fd);
+}
+</script>
+<style type="text/css" media="print">
+.dontprint
+{ display: none; }
+</style>
+</head>
+<body onload="brython({debug:1})">
+<script type="text/python" src="engine.py"></script>
+<div class="dontprint menu">
+	<ul>
+		<li>
+			<form method='POST' action="saveFile">
+				<input name="filename" value="test">
+				<select name="extension">
+					<option value="will">will</option>
+					<option value="docx">docx</option>
+					<option value="tex">tex</option>
+					<option value="pdflatex">pdflatex</option>
+				<select>
+				<button type="submit">Save</button>
+			</form>
+		</li>
+		<li>
+			<input id="filename" value="test.will">
+			<button id="openButton">Open</button>
+		</li>
+	</ul>
+</div>
+<div id="page">
+</div>
+</body>
+</html>
