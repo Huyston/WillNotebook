@@ -25,6 +25,11 @@ The default format is ".will" and it is the recommended format for holding all t
 
 It is focused on academic writting. And so it provides an automatic section numbering, equation numbering, referencing system, figure with captions and sources and it is more clean and readable (like a report or a paper with hidden code).
 
+## How to use it
+
+Download all the files and run the server "main.py". After this, visit 127.0.0.1 on your browser and have fun :)
+You should read the example for instructions on how to create your first document, by opening the "example.will" file in the blue bar.
+
 ## The future
 
 I made this to write my PhD thesis, so I shall improve it to be easy, hackable, and with many features that improve writting efficiency.
