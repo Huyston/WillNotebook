@@ -27,7 +27,7 @@ It is focused on academic writting. And so it provides an automatic section numb
 
 ## How to use it
 
-Download all the files and run the server "main.py". After this, visit 127.0.0.1 on your browser and have fun :)
+Download all the files and run the server "main.py". After this, visit "127.0.0.1:8080" on your browser and have fun :)
 You should read the example for instructions on how to create your first document, by opening the "example.will" file in the blue bar.
 
 ## The future
