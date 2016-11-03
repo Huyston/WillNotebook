@@ -27,6 +27,16 @@ It is focused on academic writting. And so it provides an automatic section numb
 
 ## How to use it
 
+### Dependencies
+To run the server you will need to have installed the following:
+
+- Cherrypy (To run the server)
+- Dill (to save the code state)
+- [Optional] LaTeX (to produce the pdflatex)
+- [Optional] Python-docx (to produce .docx documents)
+- [Optional] Sympy (To do math calculations)
+
+# Start the server
 Download all the files and run the server "main.py". After this, visit "127.0.0.1:8080" on your browser and have fun :)
 You should read the example for instructions on how to create your first document, by opening the "example.will" file in the blue bar.
 
