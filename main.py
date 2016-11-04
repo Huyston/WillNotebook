@@ -336,7 +336,7 @@ class WillNotebook(object):
             # toDo check if cell is 'image'. If so, construct the image, not
             # the textArea
             print(cell)
-            if 'type' in stuff['content']:
+            if 'type' in stuff['content'] and not type(stuff['content']) == str:
                 if stuff['content']['type'] == 'image':
                     img = stuff['content']['img']
                     label = stuff['content']['label']
