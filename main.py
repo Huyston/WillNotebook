@@ -19,13 +19,17 @@ def section(text):
 #Locals = {}
 
 def getAllInside(first,last,content):
-    # returns a dict of values first+value+last and the values
+    # returns a dict of keys first+value+last and the values
     valuesDict = {}
-    while first in content and last in content:
-        f = content.index(first)
-        l = content[f:].index(last)
-        key = content[f:f+l+len(last)]
-        value = key.replace(first,'').replace(last,'')
+    for i in range(content.count(first)):
+        try:
+            f = content.index(first)
+            l = content[f+1:].index(last)
+            key = content[f:f+1+l+len(last)]
+            value = key.replace(first,'').replace(last,'')
+        except ValueError:
+            print('Error')
+            continue
         valuesDict[key] = value
         content = content.replace(key,'')
     return valuesDict
@@ -94,8 +98,10 @@ class WillNotebook(object):
             ## {{}} soh nao sera avaliado em #code
         else:
             if '{{' in content and '}}' in content:
-                print('TEMMM')
                 content = self.handleValues(content)
+            if '*' in content:
+                print('Italic parts')
+                content = self.handleItalics(content)
             if startWith('!#',content):
                 output = self.handleSections(content)
             elif startWith('!eq',content):
@@ -149,6 +155,14 @@ class WillNotebook(object):
             except Exception as e:
                 print('excep: ',e)
                 content = str(e)
+        return content
+
+    def handleItalics(self,content):
+        toItalicize = getAllInside('*','*', content)
+        for expr in toItalicize:
+            print('Italics :',expr)
+            italic = '<i>'+toItalicize[expr]+'</i>'
+            content = content.replace(expr,italic)
         return content
 
     def handleSections(self,content):
