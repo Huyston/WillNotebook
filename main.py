@@ -24,8 +24,8 @@ def getAllInside(first,last,content):
     for i in range(content.count(first)):
         try:
             f = content.index(first)
-            l = content[f+1:].index(last)
-            key = content[f:f+1+l+len(last)]
+            l = content[f+len(first):].index(last)
+            key = content[f:f+len(first)+l+len(last)]
             value = key.replace(first,'').replace(last,'')
         except ValueError:
             print('Error')
@@ -99,6 +99,13 @@ class WillNotebook(object):
         else:
             if '{{' in content and '}}' in content:
                 content = self.handleValues(content)
+            ## Order is important here, first the ***
+            if '***' in content:
+                print('BoldItalic parts')
+                content = self.handleBoldItalics(content)
+            if '**' in content:
+                print('Bold parts')
+                content = self.handleBold(content)
             if '*' in content:
                 print('Italic parts')
                 content = self.handleItalics(content)
@@ -163,6 +170,22 @@ class WillNotebook(object):
             print('Italics :',expr)
             italic = '<i>'+toItalicize[expr]+'</i>'
             content = content.replace(expr,italic)
+        return content
+
+    def handleBold(self,content):
+        toBold = getAllInside('**','**', content)
+        for expr in toBold:
+            print('Bold :',expr)
+            bold = '<b>'+toBold[expr]+'</b>'
+            content = content.replace(expr,bold)
+        return content
+
+    def handleBoldItalics(self,content):
+        toBoldItalicize = getAllInside('***','***', content)
+        for expr in toBoldItalicize:
+            print('BoldItalics :',expr)
+            boldItalic = '<i><b>'+toBoldItalicize[expr]+'</b></i>'
+            content = content.replace(expr,boldItalic)
         return content
 
     def handleSections(self,content):
