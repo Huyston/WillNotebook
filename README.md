@@ -1,5 +1,7 @@
 # WillNotebook
 
+[![Join the chat at https://gitter.im/WillNotebook/Lobby](https://badges.gitter.im/WillNotebook/Lobby.svg)](https://gitter.im/WillNotebook/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 WillNotebook is inspired by jupyter (notebook) project, but aims the specifics of academic writing. The idea is to merge the advantages and functionalities of Word, Latex and Python together into one powerful and hackable software.
 
 ## What can I do with WillNotebook
