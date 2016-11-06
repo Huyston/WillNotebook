@@ -279,47 +279,82 @@ class WillNotebook(object):
         for cell in self.archive['page']:
             content = cell['content']
             show = True
-            if '!# ' in content:
+            if '<h1>' in cell['output']:
                 if article:
                     content = '\section{'
                 else:
                     content = '\chapter{'
-                content += cell['content'].replace('!# ','')
+                title = next(iter(getAllInside('<h1>','</h1>',cell['output']).values()))
+                content += title
                 content += '}'
-            elif '!## ' in content:
+            elif '<h2>' in cell['output']:
                 if article:
                     content = '\subsection{'
                 else:
                     content = '\section{'
-                content += cell['content'].replace('!## ','')
+                title = next(iter(getAllInside('<h2>','</h2>',cell['output']).values()))
+                content += title
                 content += '}'
-            elif '!### ' in content:
+            elif '<h3>' in cell['output']:
                 if article:
                     content = '\subsubsection{'
                 else:
                     content = '\subsection{'
-                content += cell['content'].replace('!### ','')
+                title = next(iter(getAllInside('<h3>','</h3>',cell['output']).values()))
+                content += title
                 content += '}'
-            elif '!#### ' in content:
+            elif '<h4>' in cell['output']:
                 if article:
                     content = '\paragraph{'
                 else:
                     content = '\subsubsection{'
-                content += cell['content'].replace('!#### ','')
+                title = next(iter(getAllInside('<h4>','</h4>',cell['output']).values()))
+                content += title
                 content += '}'
-            elif '!##### ' in content:
+            elif '<h5>' in cell['output']:
                 if article:
                     content = '\subparagraph{'
                 else:
                     content = '\paragraph{'
-                content += cell['content'].replace('!##### ','')
+                title = next(iter(getAllInside('<h5>','</h5>',cell['output']).values()))
+                content += title
                 content += '}'
-            elif '[code]' in cell['output']:
+            elif startWith('<font class="dontprint" color="green">[code]',cell['output']):
                 show = False
+            ### special cells ###
+            elif 'type' in content and not type(content) == str:
+                if content['type'] == 'image':
+                    figure = '''\\begin{figure}[!h]
+\centering
+\includegraphics{Images/'''+content['img']+'''}
+\label{'''+content['label']+'''}
+\caption{'''+content['caption']+'''}
+Source: '''+content['source']+'''
+\end{figure}'''
+                    content = figure
+                else:
+                    raise NotImplemented
             else:
                 content = cell['output']
+
+            ### formatting ###
+            text = cell['output']
+            if '<b>' in text:
+                print('TEM BOLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLD')
+                toBold = getAllInside('<b>','</b>',text)
+                for bold in toBold:
+                    text = text.replace(bold,'\\textbf{'+toBold[bold]+'}')
+                content = text
+            if '<i>' in text:
+                toItalicize = getAllInside('<i>','</i>',text)
+                for italic in toItalicize:
+                    text = text.replace(italic,'\\textit{'+toItalicize[italic]+'}')
+                content = text
+            ### end formatting ###
+
             if show:
                 archive.write(content+'\n\n')
+
         archive.write('\\end{document}')
         archive.close()
 
