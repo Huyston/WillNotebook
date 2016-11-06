@@ -220,8 +220,8 @@ class WillNotebook(object):
     @cherrypy.expose
     def image(self,cell,img,label,source,caption):
         cell = int(cell)
+        filename = img.filename
         if cell == len(self.archive['page']):
-            filename = img.filename
             self.archive['page'].append({'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption},'output':'.'})
         i = open(os.getcwd()+'/Archieves/Images/'+filename,'wb')
         while True:
@@ -232,7 +232,7 @@ class WillNotebook(object):
                 i.write(data)
             print('Loading...')
         i.close()
-        output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="max-width:800px" src="Archieves/Images/'+filename+'"><br>'+source+'</center><br>'
+        output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="max-width:800px" src="Archieves/Images/'+filename+'"><br>Source: '+source+'</center><br>'
         self.archive['page'][cell]['output'] = output
         return output
 
