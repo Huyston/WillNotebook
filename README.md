@@ -33,7 +33,8 @@ It is focused on academic writting. And so it provides an automatic section numb
 
 ### Dependencies
 
-WillNotebook needs Python3 to run, so if you don't have it installed download it [here](https://www.python.org/ftp/python/3.5.2/Python-3.5.2.tar.xz).
+WillNotebook needs Python3 to run, so if you don't have it installed download it [here](https://www.python.org/ftp/python/3.5.2/Python-3.5.2.tar.xz). If you are under Linux, it's very likely that you already have it installed. If not, use your package manager to install it.
+
 To run the server you will need to have installed the following packages:
 
 - Cherrypy (To run the server)
@@ -48,6 +49,7 @@ You can install Python packages using pip:
 ```
 To install LaTeX, install TexLive (Linux) or MiKTeX(Windows).
 **Note**: Windows compatibility is not tested and probably PDF creation with pdflatex won't work. Export to .tex should work on all platforms even without LaTeX installed.
+
 Ubuntu
 ```bash
 # apt-get install texlive
