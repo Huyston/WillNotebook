@@ -73,7 +73,9 @@
 <h3>
 <a id="dependencies" class="anchor" href="#dependencies" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Dependencies</h3>
 
-<p>To run the server you will need to have installed the following:</p>
+<p>WillNotebook needs Python3 to run, so if you don't have it installed download it <a href="https://www.python.org/ftp/python/3.5.2/Python-3.5.2.tar.xz">here</a>. If you are under Linux, it's very likely that you already have it installed. If not, use your package manager to install it.</p>
+
+<p>To run the server you will need to have installed the following packages:</p>
 
 <ul>
 <li>Cherrypy (To run the server)</li>
@@ -82,6 +84,21 @@
 <li>[Optional] Python-docx (to produce .docx documents)</li>
 <li>[Optional] Sympy (To do math calculations)</li>
 </ul>
+
+<p>You can install Python packages using pip:</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-c"># pip install cherrypy dill python-docx sympy</span></pre></div>
+
+<p>To install LaTeX, install TexLive (Linux) or MiKTeX(Windows).
+<strong>Note</strong>: Windows compatibility is not tested and probably PDF creation with pdflatex won't work. Export to .tex should work on all platforms even without LaTeX installed.</p>
+
+<p>Ubuntu</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-c"># apt-get install texlive</span></pre></div>
+
+<p>ArchLinux</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-c"># pacman -S texlive</span></pre></div>
 
 <h1>
 <a id="start-the-server" class="anchor" href="#start-the-server" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Start the server</h1>
@@ -119,9 +136,6 @@ You should read the example for instructions on how to create your first documen
           <a href="https://github.com/Huyston/WillNotebook/tarball/master" class="button">
             <small>Download</small>
             .tar.gz file
-          </a>
-          <a href="https://huyston.github.io/WillNotebook/documentation.html" class="button">
-            <small>Check the</small> Documentation
           </a>
 
           <p class="repo-owner"><a href="https://github.com/Huyston/WillNotebook"></a> is maintained by <a href="https://github.com/Huyston">Huyston</a>.</p>
