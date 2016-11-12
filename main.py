@@ -265,13 +265,14 @@ class WillNotebook(object):
         else:
             texClass = 'report'
         archive.write('''\\documentclass{'''+texClass+'''}
-\\usepackage[T1]{fontenc}
-\\usepackage[utf8]{inputenc}
-\\usepackage{graphicx}
-\\usepackage{mathtools}
+\\usepackage[T1]{fontenc} %font encoding setup
+\\usepackage[utf8]{inputenc} %input encoding setup
+\\usepackage{graphicx} %for displaying figures
+\\usepackage{mathtools} %for displaying math
+\\usepackage{listings} %for displaying code
 
-\\setcounter{secnumdepth}{5}
-\\setcounter{tocdepth}{5}
+\\setcounter{secnumdepth}{5} %for displaying numbers up to 5 levels
+\\setcounter{tocdepth}{5} %for displaying numbers up to 5 levels in TOC
 
 \\begin{document}
 
@@ -340,7 +341,6 @@ Source: '''+content['source']+'''
             ### formatting ###
             text = cell['output']
             if '<b>' in text:
-                print('TEM BOLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLD')
                 toBold = getAllInside('<b>','</b>',text)
                 for bold in toBold:
                     text = text.replace(bold,'\\textbf{'+toBold[bold]+'}')
@@ -349,6 +349,16 @@ Source: '''+content['source']+'''
                 toItalicize = getAllInside('<i>','</i>',text)
                 for italic in toItalicize:
                     text = text.replace(italic,'\\textit{'+toItalicize[italic]+'}')
+                content = text
+            if '<code><pre>' in cell['output']: #multiline code
+                codes = getAllInside('<code><pre>','</pre></code>',text)
+                for code in codes:
+                    text = text.replace(code,'\\begin{lstlisting}\n'+codes[code]+'\n\end{lstlisting}')
+                content = text
+            if '<code>' in cell['output']: #inline code
+                codes = getAllInside('<code>','</code>',text)
+                for code in codes:
+                    text = text.replace(code,'\lstinline{'+codes[code]+'}')
                 content = text
             ### end formatting ###
 
