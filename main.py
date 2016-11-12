@@ -319,7 +319,7 @@ class WillNotebook(object):
                 title = next(iter(getAllInside('<h5>','</h5>',cell['output']).values()))
                 content += title
                 content += '}'
-            elif startWith('<font class="dontprint" color="green">[code]',cell['output']):
+            elif 'class="dontprint"' in cell['output']:
                 show = False
             ### special cells ###
             elif 'type' in content and not type(content) == str:
