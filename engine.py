@@ -399,15 +399,11 @@ def send(content):
     req.send({'cell':page.index(outIndex),'content':content})
 
 def sendImg(img,label,source,caption):
-    # Sends the cell content to the server handlers
-    window.uploadFile(page.index(outIndex),img,label,source,caption)
+    window.uploadImg(page.index(outIndex),img,label,source,caption)
 
 def openFile(ev):
-    req = ajax.ajax()
-    req.bind('complete',renderFile)
-    req.open('post','http://127.0.0.1:8080/openFile',True)
-    req.set_header('content-type','application/x-www-form-urlencoded')
-    req.send({'filename':document['filename'].value})
+    toOpen = document['toOpen'].files[0]
+    window.uploadFile(toOpen)
 
 def sendNewCell(index):
     print('New cell pending')
@@ -430,29 +426,28 @@ def ack(req):
 
 def renderFile(req):
     global page,cellCounter
-    if req.status==200 or req.status==0:
-        del document['page']
-        document <= DIV(id="page")
-        page = []
-        print('Done deleting')
-        try:
-            document['page'].innerHTML +=  req.text
-            cellCounter = 0
-            while str(cellCounter) in document:
-                print('Cell :',cellCounter)
-                bindShortcuts(document['c'+str(cellCounter)])
-                bindOutShortcuts(document['co'+str(cellCounter)])
-                page.append(str(cellCounter))
-                print(page)
-                cellCounter += 1
-            newCell()
-            window.math.reNumber()
-            #window.MathJax.Hub.Queue(["Typeset",window.MathJax.Hub])
-            updateSectionNumbers()
-            updateFigureNumbers()
-            print('Done loading file')
-        except Exception as e:
-            print(e)
+    del document['page']
+    document <= DIV(id="page")
+    page = []
+    print('Done deleting')
+    try:
+        document['page'].innerHTML +=  req
+        cellCounter = 0
+        while str(cellCounter) in document:
+            print('Cell :',cellCounter)
+            bindShortcuts(document['c'+str(cellCounter)])
+            bindOutShortcuts(document['co'+str(cellCounter)])
+            page.append(str(cellCounter))
+            print(page)
+            cellCounter += 1
+        newCell()
+        window.math.reNumber()
+        #window.MathJax.Hub.Queue(["Typeset",window.MathJax.Hub])
+        updateSectionNumbers()
+        updateFigureNumbers()
+        print('Done loading file')
+    except Exception as e:
+        print(e)
 
 def focusNextCell(id):
     global page
@@ -530,3 +525,4 @@ page = []
 newCell()
 document['openButton'].bind('click',openFile)
 window.receiveImg = receiveImg
+window.renderFile = renderFile

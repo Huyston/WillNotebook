@@ -397,6 +397,21 @@ Source: '''+content['source']+'''
         d.save(os.getcwd()+'/Archieves/'+filename+'.docx')
 
     @cherrypy.expose
+    def open(self,toOpen):
+        filename = toOpen.filename
+        d = open(os.getcwd()+'/Archieves/'+filename,'wb')
+        while True:
+            data = toOpen.file.read(4096)
+            if not data:
+                break
+            else:
+                d.write(data)
+            print('Loading...')
+        d.close()
+        req = self.openFile(filename)
+        return req
+
+    @cherrypy.expose
     def openFile(self,filename):
         self.archive = {}
         print('Openning file ',filename)

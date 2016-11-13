@@ -25,7 +25,7 @@
 </script>
 <script type='text/javascript' asyn src='MathJax-master/MathJax.js?config=TeX-MML-AM_CHTML'></script>
 <script>
-function uploadFile(cell,file,label,source,caption){
+function uploadImg(cell,file,label,source,caption){
     var url = 'http://127.0.0.1:8080/image';
     var xhr = new XMLHttpRequest();
     var fd = new FormData();
@@ -41,6 +41,20 @@ function uploadFile(cell,file,label,source,caption){
     fd.append("label", label);
     fd.append("source", source);
     fd.append("caption", caption);
+    xhr.send(fd);
+}
+function uploadFile(toOpen){
+    var url = 'http://127.0.0.1:8080/open';
+    var xhr = new XMLHttpRequest();
+    var fd = new FormData();
+    xhr.open("POST", url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            // Every thing ok, file uploaded
+            renderFile(xhr.responseText); // handle response.
+        }
+    };
+    fd.append("toOpen", toOpen);
     xhr.send(fd);
 }
 </script>
@@ -66,7 +80,7 @@ function uploadFile(cell,file,label,source,caption){
 			</form>
 		</li>
 		<li>
-			<input id="filename" value="example.will">
+			<input type="file" id="toOpen">
 			<button id="openButton">Open</button>
 		</li>
 	</ul>
