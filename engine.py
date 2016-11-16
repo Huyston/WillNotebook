@@ -594,7 +594,13 @@ def handleReferences():
             # Now generate the new ones
             toRef = getAllInside('\\ref{','}', html)
             for expr in toRef:
-                html = html.replace(expr,references[expr])
+                if expr in references:
+                    html = html.replace(expr,references[expr])
+                else:
+                    label = getInside('\\ref{','}',expr)
+                    ref = '<a href="#'+label+'">???</a>'
+                    references[expr] = ref
+                    html = html.replace(expr, ref)
             document['o'+id].html = html
             
 
