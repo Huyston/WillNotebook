@@ -196,11 +196,20 @@ class WillNotebook(object):
                 n+=1
             else:
                 break
-        heading = content[pos+n:]
-        return '<h'+str(n)+'>'+heading+'</h'+str(n)+'>'
+        heading = ''
+        labelFlag = False
+        for line in content.split('\n'):
+            if '!#' in line:
+                label = line.replace('!'+'#'*n+' ','')
+                labelFlag = True
+            else:
+                heading += line
+        if labelFlag:
+            return '<h'+str(n)+' id="'+label+'">'+heading+'</h'+str(n)+'>'
+        else:
+            return '<h'+str(n)+'>'+heading+'</h'+str(n)+'>'
 
     def handleEquations(self,content):
-        pos = content.index('!eq')+3
         eqContent = ''
         for line in content.split('\n'):
             if '!eq' in line:

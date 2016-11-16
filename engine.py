@@ -3,6 +3,29 @@ from browser.html import TEXTAREA, CENTER, DIV, PRE, FORM, INPUT, BUTTON, BR
 
 jq = window.jQuery.noConflict(True)
 
+def getAllInside(first,last,content):
+    # returns a dict of keys first+value+last and the values
+    valuesDict = {}
+    for i in range(content.count(first)):
+        try:
+            f = content.index(first)
+            l = content[f+len(first):].index(last)
+            key = content[f:f+len(first)+l+len(last)]
+            value = key.replace(first,'').replace(last,'')
+        except ValueError:
+            print('Error')
+            continue
+        valuesDict[key] = value
+        content = content.replace(key,'')
+    return valuesDict
+
+def getInside(first,last,content):
+    f = content.index(first)
+    l = content[f+len(first):].index(last)
+    key = content[f:f+len(first)+l+len(last)]
+    value = key.replace(first,'').replace(last,'')
+    return value
+
 def shortcuts(ev):
     id = document.activeElement.id
     if ev.shiftKey and ev.which == 13:
@@ -365,27 +388,29 @@ def bindOutShortcuts(element):
     element.bind('keydown',outShortcuts)
 
 def receive(req):
-	# Receiving the server handler output as req.text
+    # Receiving the server handler output as req.text
     global outIndex
     try:
         print('Receiving...',outIndex)
         if req.status==200 or req.status==0:
             print('Received: ',req.text)
             document['o'+outIndex].innerHTML =  req.text
+            updateSectionNumbers()
+            handleReferences()
             window.math.reNumber()
             #window.MathJax.Hub.Queue(["Typeset",window.MathJax.Hub])
-            updateSectionNumbers()
             print('o'+outIndex)
     except Exception as e:
         print('Exception: ',e)
 
 def receiveImg(req):
-	# Receiving the server handler output as req.text
+    # Receiving the server handler output as req.text
     global outIndex
     try:
         print('Receiving...',outIndex)
         document['o'+outIndex].innerHTML = req
         updateFigureNumbers()
+        handleReferences()
         print('o'+outIndex)
     except Exception as e:
         print('Exception: ',e)
@@ -441,10 +466,11 @@ def renderFile(req):
             print(page)
             cellCounter += 1
         newCell()
-        window.math.reNumber()
-        #window.MathJax.Hub.Queue(["Typeset",window.MathJax.Hub])
         updateSectionNumbers()
         updateFigureNumbers()
+        handleReferences() # this order is important. If it comes after mathjax, the \ref command gets evalluated by it first
+        window.math.reNumber()
+        #window.MathJax.Hub.Queue(["Typeset",window.MathJax.Hub])
         print('Done loading file')
     except Exception as e:
         print(e)
@@ -466,6 +492,7 @@ def nextId(id):
         return page[-1]
 
 def updateSectionNumbers():
+    global references
     def replaceNumber(content,tag,numbering):
         if '<span>' in content:
             heading = content[content.index('</span>'):]
@@ -480,25 +507,56 @@ def updateSectionNumbers():
     for id in page:
         html = document['o'+id].html
         if html:
-            if '<h1>' in html:
+            if '<h1' in html:
+                ## toDo fazer igual aki nos outros!!
                 S+=1
                 SS,SSS,SSSS,SSSSS = 0,0,0,0
-                document['o'+id].html = replaceNumber(html,'<h1>',str(S)+'. ')
-            elif '<h2>' in html:
+                if 'id="' in html:
+                    tag = '<h1'+getInside('<h1','>',html)+'>'
+                    label = getInside('id="','"',html)
+                    references['\\ref{'+label+'}'] = '<a href="#'+label+'">'+str(S)+'</a>'
+                else:
+                    tag = '<h1>'
+                document['o'+id].html = replaceNumber(html,tag,str(S)+'. ')
+            elif '<h2' in html:
                 SS+=1
                 SSS,SSSS,SSSSS = 0,0,0
-                document['o'+id].html = replaceNumber(html,'<h2>',str(S)+'.'+str(SS)+'. ')
-            elif '<h3>' in html:
+                if 'id="' in html:
+                    tag = '<h2'+getInside('<h2','>',html)+'>'
+                    label = getInside('id="','"',html)
+                    references['\\ref{'+label+'}'] = '<a href="#'+label+'">'+str(S)+'.'+str(SS)+'</a>'
+                else:
+                    tag = '<h2>'
+                document['o'+id].html = replaceNumber(html,tag,str(S)+'.'+str(SS)+'. ')
+            elif '<h3' in html:
                 SSS+=1
                 SSSS,SSSSS = 0,0
-                document['o'+id].html = replaceNumber(html,'<h3>',str(S)+'.'+str(SS)+'.'+str(SSS)+'. ')
-            elif '<h4>' in html:
+                if 'id="' in html:
+                    tag = '<h3'+getInside('<h3','>',html)+'>'
+                    label = getInside('id="','"',html)
+                    references['\\ref{'+label+'}'] = '<a href="#'+label+'">'+str(S)+'.'+str(SS)+'.'+str(SSS)+'</a>'
+                else:
+                    tag = '<h3>'
+                document['o'+id].html = replaceNumber(html,tag,str(S)+'.'+str(SS)+'.'+str(SSS)+'. ')
+            elif '<h4' in html:
                 SSSS+=1
                 SSSSS = 0
-                document['o'+id].html = replaceNumber(html,'<h4>',str(S)+'.'+str(SS)+'.'+str(SSS)+'.'+str(SSSS)+'. ')
-            elif '<h5>' in html:
+                if 'id="' in html:
+                    tag = '<h4'+getInside('<h4','>',html)+'>'
+                    label = getInside('id="','"',html)
+                    references['\\ref{'+label+'}'] = '<a href="#'+label+'">'+str(S)+'.'+str(SS)+'.'+str(SSS)+'.'+str(SSSS)+'</a>'
+                else:
+                    tag = '<h4>'
+                document['o'+id].html = replaceNumber(html,tag,str(S)+'.'+str(SS)+'.'+str(SSS)+'.'+str(SSSS)+'. ')
+            elif '<h5' in html:
                 SSSSS+=1
-                document['o'+id].html = replaceNumber(html,'<h5>',str(S)+'.'+str(SS)+'.'+str(SSS)+'.'+str(SSSS)+'.'+str(SSSSS)+'. ')
+                if 'id="' in html:
+                    tag = '<h5'+getInside('<h5','>',html)+'>'
+                    label = getInside('id="','"',html)
+                    references['\\ref{'+label+'}'] = '<a href="#'+label+'">'+str(S)+'.'+str(SS)+'.'+str(SSS)+'.'+str(SSSS)+'.'+str(SSSSS)+'</a>'
+                else:
+                    tag = '<h5>'
+                document['o'+id].html = replaceNumber(html,tag,str(S)+'.'+str(SS)+'.'+str(SSS)+'.'+str(SSSS)+'.'+str(SSSSS)+'. ')
                 
 def updateFigureNumbers():
     def replaceNumber(content,tag,numbering):
@@ -519,6 +577,26 @@ def updateFigureNumbers():
             if '<figcaption>' in html:
                 N+=1
                 document['o'+id].html = replaceNumber(html,'<figcaption>','<b>Fig. '+str(N)+':</b> ')
+
+references = {}
+def handleReferences():
+    global references
+    for id in page:
+        html = document['o'+id].html
+        if html:
+            # First update the old ones
+            for ref in references:
+                label = getInside('\\ref{','}',ref)
+                reference = '<a href="#'+label+'">'
+                if reference in html:
+                    number = getInside(reference,'</a>',html)
+                    html = html.replace(reference+number+'</a>', references['\\ref{'+label+'}'])
+            # Now generate the new ones
+            toRef = getAllInside('\\ref{','}', html)
+            for expr in toRef:
+                html = html.replace(expr,references[expr])
+            document['o'+id].html = html
+            
 
 # Initialize the first cell
 page = []
