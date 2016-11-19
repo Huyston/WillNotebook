@@ -169,6 +169,7 @@ def handleShiftDelete(id):
         page.remove(id)
     updateSectionNumbers()
     updateFigureNumbers()
+    handleReferences()
     window.math.reNumber()
     print('Cell deleted')
     print(page)
@@ -559,6 +560,7 @@ def updateSectionNumbers():
                 document['o'+id].html = replaceNumber(html,tag,str(S)+'.'+str(SS)+'.'+str(SSS)+'.'+str(SSSS)+'.'+str(SSSSS)+'. ')
                 
 def updateFigureNumbers():
+    global references
     def replaceNumber(content,tag,numbering):
         print('Content: ',content)
         if '<span>' in content:
@@ -574,9 +576,16 @@ def updateFigureNumbers():
     for id in page:
         html = document['o'+id].html
         if html:
-            if '<figcaption>' in html:
+            if '<figcaption' in html:
                 N+=1
-                document['o'+id].html = replaceNumber(html,'<figcaption>','<b>Fig. '+str(N)+':</b> ')
+                if 'id="' in html:
+                    label = getInside('id="','"',html)
+                    references['\\ref{'+label+'}'] = '<a href="#'+label+'">'+str(N)+'</a>'
+                    tag = '<figcaption id="'+label+'">'
+                    print('tem id')
+                else:
+                    tag = '<figcaption>'
+                document['o'+id].html = replaceNumber(html,tag,'<b>Fig. '+str(N)+':</b> ')
 
 references = {}
 def handleReferences():
@@ -586,6 +595,7 @@ def handleReferences():
         if html:
             # First update the old ones
             for ref in references:
+                print('No ref: ',ref)
                 label = getInside('\\ref{','}',ref)
                 reference = '<a href="#'+label+'">'
                 if reference in html:

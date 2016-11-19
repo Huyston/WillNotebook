@@ -241,7 +241,10 @@ class WillNotebook(object):
                 i.write(data)
             print('Loading...')
         i.close()
-        output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="max-width:800px" src="Archieves/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+        if label:
+            output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="max-width:800px" src="Archieves/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+        else:
+            output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="max-width:800px" src="Archieves/Images/'+filename+'"><br>Source: '+source+'</center><br>'
         self.archive['page'][cell]['output'] = output
         return output
 
