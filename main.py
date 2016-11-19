@@ -265,9 +265,11 @@ class WillNotebook(object):
         archive = open(os.getcwd()+'/Archieves/'+filename+'.will','wb')
         try:
             self.archive['Locals'] = self.Locals
+            pickle.dump(self.archive,archive)
         except Exception as e:
             print('Could not save state! ',e)
-        pickle.dump(self.archive,archive)
+            self.archive['Locals'] = {}
+            pickle.dump(self.archive,archive)
         archive.close()
 
     def saveAsTex(self,filename,article=True):
