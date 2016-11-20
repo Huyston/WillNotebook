@@ -55,17 +55,12 @@ class Capturing(list):
 	  
 class WillNotebook(object):
     emptyLineSymbol = '.'
-    def __init__(self,**kwargs):
-        super(WillNotebook).__init__(**kwargs)
-        self.Globals = {'section':section}
-        self.Locals = {}
-
     @cherrypy.expose
     def index(self):
-        self.Globals = {'section':section}
-        self.Locals = {}
         notebook = open('notebook.html','rb')
-        self.archive = {'page':[]}
+        #The globals can be used to perform Python default functions for WillNotebook
+        #It is ignored in the save state, so only locals is saved in the document
+        self.archive = {'Globals':{'section':section},'Locals':{},'page':[]}
         return notebook
 
     @cherrypy.expose
@@ -126,7 +121,7 @@ class WillNotebook(object):
     def handlePythonCode(self,content):
         with Capturing() as output:
             try:
-                exec(content,self.Globals,self.Locals)
+                exec(content,self.archive['Globals'],self.archive['Locals'])
             except Exception as e:
                 print('Exception: ', e)
         if output == []:
@@ -144,7 +139,7 @@ class WillNotebook(object):
         toEvaluate = getAllInside('{{','}}',content)
         for expr in toEvaluate:
             try:
-                out = eval(toEvaluate[expr],self.Globals,self.Locals)
+                out = eval(toEvaluate[expr],self.archive['Globals'],self.archive['Locals'])
                 objType = str(type(out))
                 if 'sympy' in objType or 'list' in objType and 'sympy' in str(type(out[0])):
                     print('Is a sympy object!')
@@ -161,7 +156,7 @@ class WillNotebook(object):
                 content = content.replace(expr,out)
             except Exception as e:
                 print('excep: ',e)
-                content = str(e)
+                content = 'Exception: '+str(e)
         return content
 
     def handleItalics(self,content):
@@ -264,7 +259,6 @@ class WillNotebook(object):
     def saveAsWill(self,filename):
         archive = open(os.getcwd()+'/Archieves/'+filename+'.will','wb')
         try:
-            self.archive['Locals'] = self.Locals
             pickle.dump(self.archive,archive)
         except Exception as e:
             print('Could not save state! ',e)
@@ -437,10 +431,7 @@ Source: '''+content['source']+'''
             print('Error opening file. File does not exist!')
             return '<center id="c1"><textarea id="1" action="evalCell" style="width: 800px; display: none;">'+content+'</textarea></center><center id="co1"><div id="o1" style="width: 800px; text-align: justify;">'+output+'</div></center>'
         self.archive = pickle.load(archive)
-        try:
-            self.Locals = self.archive['Locals']
-        except Exception as e:
-            print('File has no Locals. ',e)
+        self.archive['Globals'] = {'section':section}
         archive.close()
         notebook = ''
         for cell,stuff in enumerate(self.archive['page']):
