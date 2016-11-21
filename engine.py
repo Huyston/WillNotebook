@@ -592,7 +592,7 @@ def handleReferences():
     global references
     for id in page:
         html = document['o'+id].html
-        if html:
+        if '\\ref{' in html or '<a href="#' in html:
             # First update the old ones
             for ref in references:
                 print('No ref: ',ref)
