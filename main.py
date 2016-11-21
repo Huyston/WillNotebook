@@ -55,45 +55,49 @@ class Capturing(list):
 	  
 class WillNotebook(object):
     emptyLineSymbol = '.'
+    docID = 0
+    archive = {}
     @cherrypy.expose
     def index(self):
-        notebook = open('notebook.html','rb')
+        self.docID += 1
+        notebook = open('notebook.html','r')
+        notebook = notebook.read().replace('!@docID@!',str(self.docID))
         #The globals can be used to perform Python default functions for WillNotebook
         #It is ignored in the save state, so only locals is saved in the document
-        self.archive = {'Globals':{'section':section},'Locals':{},'page':[]}
+        self.archive[str(self.docID)] = {'Globals':{'section':section},'Locals':{},'page':[]}
         return notebook
 
     @cherrypy.expose
-    def newCell(self,index):
+    def newCell(self,docID,index):
         print('New cell called')
-        self.archive['page'].insert(int(index),{'content':'','output':'.'})
+        self.archive[docID]['page'].insert(int(index),{'content':'','output':'.'})
         return 'Cell inserted'
 
     @cherrypy.expose
-    def deleteCell(self,index):
+    def deleteCell(self,docID,index):
         index = int(index)
         print('Delete cell called')
         print('Index: ',index)
-        if 'type' in self.archive['page'][index]['content']:
-            if self.archive['page'][index]['content']['type'] == 'image':
-                filename = self.archive['page'][index]['content']['img']
+        if 'type' in self.archive[docID]['page'][index]['content']:
+            if self.archive[docID]['page'][index]['content']['type'] == 'image':
+                filename = self.archive[docID]['page'][index]['content']['img']
                 os.remove(os.getcwd()+'/Archieves/Images/'+filename)
-        self.archive['page'].pop(int(index))
+        self.archive[docID]['page'].pop(int(index))
         return 'Cell deleted'
 
     @cherrypy.expose
-    def evalCell(self,cell,content):
+    def evalCell(self,docID,cell,content):
         cell = int(cell)
         print(cell)
-        if cell == len(self.archive['page']):
-            self.archive['page'].append({'content':content,'output':'.'})
-        self.archive['page'][cell]['content'] = content
+        if cell == len(self.archive[docID]['page']):
+            self.archive[docID]['page'].append({'content':content,'output':'.'})
+        self.archive[docID]['page'][cell]['content'] = content
         if startWith('#code',content):
-            output = self.handlePythonCode(content)
+            output = self.handlePythonCode(docID,content)
             ## {{}} soh nao sera avaliado em #code
         else:
             if '{{' in content and '}}' in content:
-                content = self.handleValues(content)
+                content = self.handleValues(docID,content)
             ## Order is important here, first the ***
             if '***' in content:
                 print('BoldItalic parts')
@@ -114,14 +118,14 @@ class WillNotebook(object):
                 output = content
         if emptyLine(output):
             output = self.emptyLineSymbol
-        self.archive['page'][cell]['output'] = output
+        self.archive[docID]['page'][cell]['output'] = output
         print('Out: ',output)
         return output
 
-    def handlePythonCode(self,content):
+    def handlePythonCode(self,docID,content):
         with Capturing() as output:
             try:
-                exec(content,self.archive['Globals'],self.archive['Locals'])
+                exec(content,self.archive[docID]['Globals'],self.archive[docID]['Locals'])
             except Exception as e:
                 print('Exception: ', e)
         if output == []:
@@ -135,11 +139,11 @@ class WillNotebook(object):
             # Retorna o primeiro indice da lista (str)
             return output[0]
 
-    def handleValues(self,content):
+    def handleValues(self,docID,content):
         toEvaluate = getAllInside('{{','}}',content)
         for expr in toEvaluate:
             try:
-                out = eval(toEvaluate[expr],self.archive['Globals'],self.archive['Locals'])
+                out = eval(toEvaluate[expr],self.archive[docID]['Globals'],self.archive[docID]['Locals'])
                 objType = str(type(out))
                 if 'sympy' in objType or 'list' in objType and 'sympy' in str(type(out[0])):
                     print('Is a sympy object!')
@@ -222,11 +226,11 @@ class WillNotebook(object):
         return '<center><b><font size="7">'+title+'</font></b></center><br><br>'
     
     @cherrypy.expose
-    def image(self,cell,img,label,source,caption):
+    def image(self,docID,cell,img,label,source,caption):
         cell = int(cell)
         filename = img.filename
-        if cell == len(self.archive['page']):
-            self.archive['page'].append({'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption},'output':'.'})
+        if cell == len(self.archive[docID]['page']):
+            self.archive[docID]['page'].append({'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption},'output':'.'})
         i = open(os.getcwd()+'/Archieves/Images/'+filename,'wb')
         while True:
             data = img.file.read(4096)
@@ -240,33 +244,33 @@ class WillNotebook(object):
             output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="max-width:800px" src="Archieves/Images/'+filename+'"><br>Source: '+source+'</center><br>'
         else:
             output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="max-width:800px" src="Archieves/Images/'+filename+'"><br>Source: '+source+'</center><br>'
-        self.archive['page'][cell]['output'] = output
+        self.archive[docID]['page'][cell]['output'] = output
         return output
 
     @cherrypy.expose
-    def saveFile(self,filename,extension):
+    def saveFile(self,docID,filename,extension):
         if extension == 'will':
-            self.saveAsWill(filename)
+            self.saveAsWill(docID,filename)
         elif extension == 'tex':
-            self.saveAsTex(filename)
+            self.saveAsTex(docID,filename)
         elif extension == 'docx':
-            self.saveAsDocx(filename)
+            self.saveAsDocx(docID,filename)
         elif extension == 'pdflatex':
-            self.saveAsPdfLatex(filename)
+            self.saveAsPdfLatex(docID,filename)
             extension = 'pdf'
         return serve_file(os.getcwd()+'/Archieves/'+filename+'.'+extension,"application/x-download","attachment")
 
-    def saveAsWill(self,filename):
+    def saveAsWill(self,docID,filename):
         archive = open(os.getcwd()+'/Archieves/'+filename+'.will','wb')
         try:
-            pickle.dump(self.archive,archive)
+            pickle.dump(self.archive[docID],archive)
         except Exception as e:
             print('Could not save state! ',e)
-            self.archive['Locals'] = {}
-            pickle.dump(self.archive,archive)
+            self.archive[docID]['Locals'] = {}
+            pickle.dump(self.archive[docID],archive)
         archive.close()
 
-    def saveAsTex(self,filename,article=True):
+    def saveAsTex(self,docID,filename,article=True):
         archive = open(os.getcwd()+'/Archieves/'+filename+'.tex','w')
         if article:
             texClass = 'article'
@@ -285,7 +289,7 @@ class WillNotebook(object):
 \\begin{document}
 
 ''')
-        for cell in self.archive['page']:
+        for cell in self.archive[docID]['page']:
             content = cell['content']
             show = True
             if '<h1>' in cell['output']:
@@ -383,11 +387,11 @@ Source: '''+content['source']+'''
         call(['pdflatex','-interaction=nonstopmode',filename+'.tex'], cwd=os.getcwd()+'/Archieves/')
         call(['pdflatex','-interaction=nonstopmode',filename+'.tex'], cwd=os.getcwd()+'/Archieves/')
 
-    def saveAsDocx(self,filename):
+    def saveAsDocx(self,docID,filename):
         from docx import Document
         from docx.shared import Inches
         d = Document()
-        for cell in self.archive['page']:
+        for cell in self.archive[docID]['page']:
             content = cell['content']
             if '!# ' in content:
                 d.add_heading(content.replace('!# ',''),level=1)
@@ -405,7 +409,7 @@ Source: '''+content['source']+'''
         d.save(os.getcwd()+'/Archieves/'+filename+'.docx')
 
     @cherrypy.expose
-    def open(self,toOpen):
+    def open(self,docID,toOpen):
         filename = toOpen.filename
         d = open(os.getcwd()+'/Archieves/'+filename,'wb')
         while True:
@@ -416,12 +420,12 @@ Source: '''+content['source']+'''
                 d.write(data)
             print('Loading...')
         d.close()
-        req = self.openFile(filename)
+        req = self.openFile(docID,filename)
         return req
 
     @cherrypy.expose
-    def openFile(self,filename):
-        self.archive = {}
+    def openFile(self,docID,filename):
+        self.archive[docID] = {}
         print('Openning file ',filename)
         try:
             archive = open(os.getcwd()+'/Archieves/'+filename,'rb')
@@ -430,11 +434,11 @@ Source: '''+content['source']+'''
             output = content
             print('Error opening file. File does not exist!')
             return '<center id="c1"><textarea id="1" action="evalCell" style="width: 800px; display: none;">'+content+'</textarea></center><center id="co1"><div id="o1" style="width: 800px; text-align: justify;">'+output+'</div></center>'
-        self.archive = pickle.load(archive)
-        self.archive['Globals'] = {'section':section}
+        self.archive[docID] = pickle.load(archive)
+        self.archive[docID]['Globals'] = {'section':section}
         archive.close()
         notebook = ''
-        for cell,stuff in enumerate(self.archive['page']):
+        for cell,stuff in enumerate(self.archive[docID]['page']):
             # toDo check if cell is 'image'. If so, construct the image, not
             # the textArea
             print(cell)

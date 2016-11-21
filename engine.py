@@ -422,14 +422,14 @@ def send(content):
     req.bind('complete',receive)
     req.open('POST','http://127.0.0.1:8080/evalCell',True)
     req.set_header('content-type','application/x-www-form-urlencoded')
-    req.send({'cell':page.index(outIndex),'content':content})
+    req.send({'docID':window.docID,'cell':page.index(outIndex),'content':content})
 
 def sendImg(img,label,source,caption):
-    window.uploadImg(page.index(outIndex),img,label,source,caption)
+    window.uploadImg(window.docID,page.index(outIndex),img,label,source,caption)
 
 def openFile(ev):
     toOpen = document['toOpen'].files[0]
-    window.uploadFile(toOpen)
+    window.uploadFile(window.docID,toOpen)
 
 def sendNewCell(index):
     print('New cell pending')
@@ -437,7 +437,7 @@ def sendNewCell(index):
     req.bind('complete',ack)
     req.open('post','http://127.0.0.1:8080/newCell',True)
     req.set_header('content-type','application/x-www-form-urlencoded')
-    req.send({'index':index})
+    req.send({'docID':window.docID,'index':index})
 
 def sendDeleteCell(index):
     print('Delete cell pending')
@@ -445,7 +445,7 @@ def sendDeleteCell(index):
     req.bind('complete',ack)
     req.open('post','http://127.0.0.1:8080/deleteCell',True)
     req.set_header('content-type','application/x-www-form-urlencoded')
-    req.send({'index':index})
+    req.send({'docID':window.docID,'index':index})
 
 def ack(req):
     print('ACK: ',req.text)
