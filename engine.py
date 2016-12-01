@@ -515,7 +515,7 @@ def updateSectionNumbers():
                 if 'id="' in html:
                     tag = '<h1'+getInside('<h1','>',html)+'>'
                     label = getInside('id="','"',html)
-                    references['\\ref{'+label+'}'] = '<a href="#'+label+'">'+str(S)+'</a>'
+                    references['\\sec{'+label+'}'] = '<a href="#'+label+'">'+str(S)+'</a>'
                 else:
                     tag = '<h1>'
                 document['o'+id].html = replaceNumber(html,tag,str(S)+'. ')
@@ -525,7 +525,7 @@ def updateSectionNumbers():
                 if 'id="' in html:
                     tag = '<h2'+getInside('<h2','>',html)+'>'
                     label = getInside('id="','"',html)
-                    references['\\ref{'+label+'}'] = '<a href="#'+label+'">'+str(S)+'.'+str(SS)+'</a>'
+                    references['\\sec{'+label+'}'] = '<a href="#'+label+'">'+str(S)+'.'+str(SS)+'</a>'
                 else:
                     tag = '<h2>'
                 document['o'+id].html = replaceNumber(html,tag,str(S)+'.'+str(SS)+'. ')
@@ -535,7 +535,7 @@ def updateSectionNumbers():
                 if 'id="' in html:
                     tag = '<h3'+getInside('<h3','>',html)+'>'
                     label = getInside('id="','"',html)
-                    references['\\ref{'+label+'}'] = '<a href="#'+label+'">'+str(S)+'.'+str(SS)+'.'+str(SSS)+'</a>'
+                    references['\\sec{'+label+'}'] = '<a href="#'+label+'">'+str(S)+'.'+str(SS)+'.'+str(SSS)+'</a>'
                 else:
                     tag = '<h3>'
                 document['o'+id].html = replaceNumber(html,tag,str(S)+'.'+str(SS)+'.'+str(SSS)+'. ')
@@ -545,7 +545,7 @@ def updateSectionNumbers():
                 if 'id="' in html:
                     tag = '<h4'+getInside('<h4','>',html)+'>'
                     label = getInside('id="','"',html)
-                    references['\\ref{'+label+'}'] = '<a href="#'+label+'">'+str(S)+'.'+str(SS)+'.'+str(SSS)+'.'+str(SSSS)+'</a>'
+                    references['\\sec{'+label+'}'] = '<a href="#'+label+'">'+str(S)+'.'+str(SS)+'.'+str(SSS)+'.'+str(SSSS)+'</a>'
                 else:
                     tag = '<h4>'
                 document['o'+id].html = replaceNumber(html,tag,str(S)+'.'+str(SS)+'.'+str(SSS)+'.'+str(SSSS)+'. ')
@@ -554,7 +554,7 @@ def updateSectionNumbers():
                 if 'id="' in html:
                     tag = '<h5'+getInside('<h5','>',html)+'>'
                     label = getInside('id="','"',html)
-                    references['\\ref{'+label+'}'] = '<a href="#'+label+'">'+str(S)+'.'+str(SS)+'.'+str(SSS)+'.'+str(SSSS)+'.'+str(SSSSS)+'</a>'
+                    references['\\sec{'+label+'}'] = '<a href="#'+label+'">'+str(S)+'.'+str(SS)+'.'+str(SSS)+'.'+str(SSSS)+'.'+str(SSSSS)+'</a>'
                 else:
                     tag = '<h5>'
                 document['o'+id].html = replaceNumber(html,tag,str(S)+'.'+str(SS)+'.'+str(SSS)+'.'+str(SSSS)+'.'+str(SSSSS)+'. ')
@@ -580,7 +580,7 @@ def updateFigureNumbers():
                 N+=1
                 if 'id="' in html:
                     label = getInside('id="','"',html)
-                    references['\\ref{'+label+'}'] = '<a href="#'+label+'">'+str(N)+'</a>'
+                    references['\\fig{'+label+'}'] = '<a href="#'+label+'">'+str(N)+'</a>'
                     tag = '<figcaption id="'+label+'">'
                     print('tem id')
                 else:
@@ -590,28 +590,51 @@ def updateFigureNumbers():
 references = {}
 def handleReferences():
     global references
+    def updateRef(html):
+        # First update the old ones
+        for ref in references:
+            print('No ref: ',ref)
+            if '\\eq{' in ref:
+                command = '\\eq{'
+            elif '\\sec{' in ref:
+                command = '\\sec{'
+            elif '\\fig{' in ref:
+                command = '\\fig{'
+            else:
+                print('something went wrong with ref')
+                continue
+            label = getInside(command,'}',ref)
+            reference = '<a href="#'+label+'">'
+            if reference in html:
+                number = getInside(reference,'</a>',html)
+                html = html.replace(reference+number+'</a>', references[command+label+'}'])
+                document['o'+id].html = html
+
+    def interpreteRef(command,html):
+        # Now generate the new ones
+        toRef = getAllInside(command,'}', html)
+        for expr in toRef:
+            if expr in references:
+                html = html.replace(expr,references[expr])
+            else:
+                label = getInside(command,'}',expr)
+                ref = '<a href="#'+label+'">???</a>'
+                references[expr] = ref
+                html = html.replace(expr, ref)
+        document['o'+id].html = html
+
     for id in page:
         html = document['o'+id].html
-        if '\\ref{' in html or '<a href="#' in html:
-            # First update the old ones
-            for ref in references:
-                print('No ref: ',ref)
-                label = getInside('\\ref{','}',ref)
-                reference = '<a href="#'+label+'">'
-                if reference in html:
-                    number = getInside(reference,'</a>',html)
-                    html = html.replace(reference+number+'</a>', references['\\ref{'+label+'}'])
-            # Now generate the new ones
-            toRef = getAllInside('\\ref{','}', html)
-            for expr in toRef:
-                if expr in references:
-                    html = html.replace(expr,references[expr])
-                else:
-                    label = getInside('\\ref{','}',expr)
-                    ref = '<a href="#'+label+'">???</a>'
-                    references[expr] = ref
-                    html = html.replace(expr, ref)
-            document['o'+id].html = html
+        if '<a href="#' in html:
+            updateRef(html)
+        if '\\fig{' in html:
+            interpreteRef('\\fig{',html)
+        if '\\eq{' in html:
+            document['o'+id].html = html.replace('\\eq{','\\ref{')
+            print('replaced eq')
+        if '\\sec{' in html:
+            interpreteRef('\\sec{',html)
+            
             
 
 # Initialize the first cell
