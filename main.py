@@ -1,4 +1,5 @@
 import cherrypy
+import random
 from cherrypy.lib.static import serve_file
 import os
 from io import StringIO
@@ -17,6 +18,11 @@ def section(text):
 
 #Globals = {'section':section}
 #Locals = {}
+
+def genRandomStr(length):
+    chars = 'qwertyuiopasdfghjklzxcvbnm1234567890QWERTYUIOPASDFGHJKLZXCVBNM'
+    randomStr = ''.join(random.choice(chars) for i in range(length))
+    return randomStr
 
 def getAllInside(first,last,content):
     # returns a dict of keys first+value+last and the values
@@ -55,16 +61,17 @@ class Capturing(list):
 	  
 class WillNotebook(object):
     emptyLineSymbol = '.'
-    docID = 0
     archive = {}
     @cherrypy.expose
     def index(self):
-        self.docID += 1
+        docID= genRandomStr(8)
+        while docID in self.archive:
+            docID = genRandomStr(8)
         notebook = open('notebook.html','r')
-        notebook = notebook.read().replace('!@docID@!',str(self.docID))
+        notebook = notebook.read().replace('!@docID@!',docID)
         #The globals can be used to perform Python default functions for WillNotebook
         #It is ignored in the save state, so only locals is saved in the document
-        self.archive[str(self.docID)] = {'Globals':{'section':section},'Locals':{},'page':[]}
+        self.archive[docID] = {'Globals':{'section':section},'Locals':{},'page':[]}
         return notebook
 
     @cherrypy.expose
