@@ -279,116 +279,43 @@ class WillNotebook(object):
 
     def saveAsTex(self,docID,filename,article=True):
         archive = open(os.getcwd()+'/Archieves/'+filename+'.tex','w')
+        from texExporter import TexExporter
         if article:
             texClass = 'article'
         else:
             texClass = 'report'
-        archive.write('''\\documentclass{'''+texClass+'''}
-\\usepackage[T1]{fontenc} %font encoding setup
-\\usepackage[utf8]{inputenc} %input encoding setup
-\\usepackage{graphicx} %for displaying figures
-\\usepackage{mathtools} %for displaying math
-\\usepackage{listings} %for displaying code
+        exporter = TexExporter(archive,texClass)
 
-\\setcounter{secnumdepth}{5} %for displaying numbers up to 5 levels
-\\setcounter{tocdepth}{5} %for displaying numbers up to 5 levels in TOC
-
-\\begin{document}
-
-''')
         for cell in self.archive[docID]['page']:
             content = cell['content']
             show = True
-            if '<h1>' in cell['output']:
-                if article:
-                    content = '\section{'
-                else:
-                    content = '\chapter{'
-                title = next(iter(getAllInside('<h1>','</h1>',cell['output']).values()))
-                content += title
-                content += '}'
-            elif '<h2>' in cell['output']:
-                if article:
-                    content = '\subsection{'
-                else:
-                    content = '\section{'
-                title = next(iter(getAllInside('<h2>','</h2>',cell['output']).values()))
-                content += title
-                content += '}'
-            elif '<h3>' in cell['output']:
-                if article:
-                    content = '\subsubsection{'
-                else:
-                    content = '\subsection{'
-                title = next(iter(getAllInside('<h3>','</h3>',cell['output']).values()))
-                content += title
-                content += '}'
-            elif '<h4>' in cell['output']:
-                if article:
-                    content = '\paragraph{'
-                else:
-                    content = '\subsubsection{'
-                title = next(iter(getAllInside('<h4>','</h4>',cell['output']).values()))
-                content += title
-                content += '}'
-            elif '<h5>' in cell['output']:
-                if article:
-                    content = '\subparagraph{'
-                else:
-                    content = '\paragraph{'
-                title = next(iter(getAllInside('<h5>','</h5>',cell['output']).values()))
-                content += title
-                content += '}'
+            if '<h' in cell['output']:
+                for level in range(1,6):
+                    n = str(level)
+                    if '<h'+n+'>' in cell['output']:
+                        title = next(iter(getAllInside('<h'+n+'>','</h'+n+'>',cell['output']).values()))
+                        exporter.addHeading(title,level)
+                        break
             elif 'class="dontprint"' in cell['output']:
                 show = False
             ### special cells ###
             elif 'type' in content and not type(content) == str:
                 if content['type'] == 'image':
-                    figure = '''\\begin{figure}[!h]
-\centering
-\includegraphics{Images/'''+content['img']+'''}
-\label{'''+content['label']+'''}
-\caption{'''+content['caption']+'''}
-Source: '''+content['source']+'''
-\end{figure}'''
-                    content = figure
+                    img = content['img']
+                    caption = content['caption']
+                    source = content['source']
+                    label = content['label']
+                    exporter.addFigure(img,caption,source,label)
                 else:
                     raise NotImplemented
             else:
-                content = cell['output']
+                if show:
+                    exporter.addText(cell['output'])
 
-            ### formatting ###
-            text = cell['output']
-            if '<b>' in text:
-                toBold = getAllInside('<b>','</b>',text)
-                for bold in toBold:
-                    text = text.replace(bold,'\\textbf{'+toBold[bold]+'}')
-                content = text
-            if '<i>' in text:
-                toItalicize = getAllInside('<i>','</i>',text)
-                for italic in toItalicize:
-                    text = text.replace(italic,'\\textit{'+toItalicize[italic]+'}')
-                content = text
-            if '<code><pre>' in cell['output']: #multiline code
-                codes = getAllInside('<code><pre>','</pre></code>',text)
-                for code in codes:
-                    text = text.replace(code,'\\begin{lstlisting}\n'+codes[code]+'\n\end{lstlisting}')
-                content = text
-            if '<code>' in cell['output']: #inline code
-                codes = getAllInside('<code>','</code>',text)
-                for code in codes:
-                    text = text.replace(code,'\lstinline{'+codes[code]+'}')
-                content = text
-            ### end formatting ###
+        exporter.close()
 
-            if show:
-                archive.write(content+'\n\n')
-
-        archive.write('\\end{document}')
-        archive.close()
-
-    def saveAsPdfLatex(self,filename):
-        self.saveAsTex(filename)
+    def saveAsPdfLatex(self,docID,filename):
+        self.saveAsTex(docID,filename)
         call(['pdflatex','-interaction=nonstopmode',filename+'.tex'], cwd=os.getcwd()+'/Archieves/')
         call(['bibtex','-interaction=nonstopmode',filename+'.aux'], cwd=os.getcwd()+'/Archieves/')
         call(['pdflatex','-interaction=nonstopmode',filename+'.tex'], cwd=os.getcwd()+'/Archieves/')
