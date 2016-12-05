@@ -6,7 +6,6 @@ from io import StringIO
 import sys
 import dill as pickle
 #import pickle
-from subprocess import call
 
 try:
     from sympy import latex
@@ -259,11 +258,11 @@ class WillNotebook(object):
         if extension == 'will':
             self.saveAsWill(docID,filename)
         elif extension == 'tex':
-            self.saveAsTex(docID,filename)
+            self.saveAs(docID,filename,extension)
         elif extension == 'docx':
-            self.saveAsDocx(docID,filename)
+            self.saveAs(docID,filename,extension)
         elif extension == 'pdflatex':
-            self.saveAsPdfLatex(docID,filename)
+            self.saveAs(docID,filename,extension)
             extension = 'pdf'
         return serve_file(os.getcwd()+'/Archieves/'+filename+'.'+extension,"application/x-download","attachment")
 
@@ -277,14 +276,20 @@ class WillNotebook(object):
             pickle.dump(self.archive[docID],archive)
         archive.close()
 
-    def saveAsTex(self,docID,filename,article=True):
-        archive = open(os.getcwd()+'/Archieves/'+filename+'.tex','w')
-        from texExporter import TexExporter
+    def saveAs(self,docID,filename,docFormat,article=True):
         if article:
             texClass = 'article'
         else:
             texClass = 'report'
-        exporter = TexExporter(archive,texClass)
+        if docFormat == 'tex':
+            from texExporter import TexExporter
+            exporter = TexExporter(filename,texClass)
+        elif docFormat == 'pdflatex':
+            from pdfLatexExporter import PdfLatexExporter
+            exporter = PdfLatexExporter(filename,texClass)
+        elif docFormat == 'docx':
+            from docxExporter import DocxExporter
+            exporter = DocxExporter(filename,texClass)
 
         for cell in self.archive[docID]['page']:
             content = cell['content']
@@ -312,14 +317,9 @@ class WillNotebook(object):
                 if show:
                     exporter.addText(cell['output'])
 
+        print('ta no close')
         exporter.close()
-
-    def saveAsPdfLatex(self,docID,filename):
-        self.saveAsTex(docID,filename)
-        call(['pdflatex','-interaction=nonstopmode',filename+'.tex'], cwd=os.getcwd()+'/Archieves/')
-        call(['bibtex','-interaction=nonstopmode',filename+'.aux'], cwd=os.getcwd()+'/Archieves/')
-        call(['pdflatex','-interaction=nonstopmode',filename+'.tex'], cwd=os.getcwd()+'/Archieves/')
-        call(['pdflatex','-interaction=nonstopmode',filename+'.tex'], cwd=os.getcwd()+'/Archieves/')
+        print('Acabou')
 
     def saveAsDocx(self,docID,filename):
         from docx import Document

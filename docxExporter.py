@@ -1,3 +1,5 @@
+from docx import Document
+from docx.shared import Inches
 import os
 
 def getAllInside(first,last,content):
@@ -16,30 +18,15 @@ def getAllInside(first,last,content):
         content = content.replace(key,'')
     return valuesDict
 
-class TexExporter():
+class DocxExporter():
     def __init__(self,filename,docType):
-        self.document = open(os.getcwd()+'/Archieves/'+filename+'.tex','w')
+        self.filename = filename
+        self.document = Document()
         self.docType = docType
-        self.writePreamble()
-
-    def writePreamble(self):
-        self.document.write('''\\documentclass{'''+self.docType+'''}
-\\usepackage[T1]{fontenc} %font encoding setup
-\\usepackage[utf8]{inputenc} %input encoding setup
-\\usepackage{graphicx} %for displaying figures
-\\usepackage{mathtools} %for displaying math
-\\usepackage{listings} %for displaying code
-
-\\setcounter{secnumdepth}{5} %for displaying numbers up to 5 levels
-\\setcounter{tocdepth}{5} %for displaying numbers up to 5 levels in TOC
-
-\\begin{document}
-
-''')
 
     def formatText(self,text):
         '''handle bold, italic, etc '''
-        content = text
+        '''content = text
         if '<b>' in text:
             toBold = getAllInside('<b>','</b>',text)
             for bold in toBold:
@@ -60,32 +47,21 @@ class TexExporter():
             for code in codes:
                 text = text.replace(code,'\lstinline{'+codes[code]+'}')
             content = text
-        return content
+        return content'''
+        return text
 
     def addText(self,text):
         formatedText = self.formatText(text)
-        self.document.write(formatedText+'\n')
+        self.document.add_paragraph(text)
 
     def addHeading(self,title,level):
-        section = {1:'\chapter{',2:'\section{',3:'\subsection{',4:'\subsubsection{',5:'\paragraph{'}
         formatedTitle = self.formatText(title)
-        if self.docType == 'article':
-            level += 1
-        tex = section[level]+formatedTitle+'}'
-        self.document.write(tex+'\n\n')
+        self.document.add_heading(formatedTitle,level=level)
 
     def addFigure(self,img,caption,source=None,label=None):
-        figure = '''\\begin{figure}[!h]
-\centering
-\includegraphics{Images/'''+img+'''}
-\label{'''+label+'''}
-\caption{'''+caption+'''}
-Source: '''+source+'''
-\end{figure}'''
-        self.document.write(figure+'\n\n')
+        pass
 
     def close(self):
-        self.document.write('\\end{document}')
-        self.document.close()
-        print('Ta aqu')
+        self.document.save(os.getcwd()+'/Archieves/'+self.filename+'.docx')
+
 
