@@ -3,6 +3,7 @@ import random
 from cherrypy.lib.static import serve_file
 import os
 from io import StringIO
+from subprocess import call
 import sys
 import dill as pickle
 #import pickle
@@ -61,6 +62,7 @@ class Capturing(list):
 class WillNotebook(object):
     emptyLineSymbol = '.'
     archive = {}
+    references = {}
     @cherrypy.expose
     def index(self):
         docID= genRandomStr(8)
@@ -71,6 +73,7 @@ class WillNotebook(object):
         #The globals can be used to perform Python default functions for WillNotebook
         #It is ignored in the save state, so only locals is saved in the document
         self.archive[docID] = {'Globals':{'section':section},'Locals':{},'page':[]}
+        self.references[docID] = {'keys':{},'References':''}
         return notebook
 
     @cherrypy.expose
@@ -114,6 +117,8 @@ class WillNotebook(object):
             if '*' in content:
                 print('Italic parts')
                 content = self.handleItalics(content)
+            if '\cite{' in content and '}' in content:
+                content = self.handleCitations(docID,content)
             if startWith('!#',content):
                 output = self.handleSections(content)
             elif startWith('!eq',content):
@@ -191,6 +196,77 @@ class WillNotebook(object):
             print('BoldItalics :',expr)
             boldItalic = '<i><b>'+toBoldItalicize[expr]+'</b></i>'
             content = content.replace(expr,boldItalic)
+        return content
+
+    def handleCitations(self,docID,content):
+        print('Citations working')
+        def getRef(line):
+            print('Getting from: ',line)
+            keyword = 'indent" >'
+            i = line.index(keyword)
+            reference = line[i+len(keyword):]
+            print('The ref is: ',reference)
+            while ' ' in reference[0]:
+                reference = reference[1:]
+            return reference
+
+        def makeReferences(docID):
+            '''Updates the references'''
+            self.references[docID]['References'] = ''
+            ### Make the tex file and compile it ###
+            citations = open(os.getcwd()+'/Archieves/cit.tex','w')
+            citations.write('''\\documentclass{article}
+\\usepackage[T1]{fontenc}
+\\usepackage[utf8]{inputenc}
+\\usepackage[alf,abnt-etal-list=0,abnt-repeated-author-omit=no]{abntex2cite}
+\\usepackage{url}
+
+\\begin{document}
+''')
+            refs = []
+            for ref in self.references[docID]['keys']:
+                citations.write(ref+'\n')
+                refs.append(ref)
+            citations.write('''\\bibliography{database}
+\end{document}''')
+            citations.close()
+            call(['htlatex','cit.tex'],cwd=os.getcwd()+'/Archieves/')
+            call(['bibtex','cit.aux'],cwd=os.getcwd()+'/Archieves/')
+            call(['htlatex','cit.tex'],cwd=os.getcwd()+'/Archieves/')
+            ### END: Make the tex file and compile it ###
+            ### Parse the compiled HTML file ###
+            html = open(os.getcwd()+'/Archieves/cit.html','r')
+            n = 0
+            beginReference = False
+            for line in html:
+                ### Get citation ###
+                if n < len(refs):
+                    if 'class="noindent"' in line or 'class="indent"' in line:
+                        self.references[docID]['keys'][refs[n]] = getRef(line)
+                        n+=1
+                ### Get reference ###
+                else:
+                    ### Order of the if's is important
+                    if '</div>' in line:
+                        beginReference = False
+                    if beginReference:
+                        self.references[docID]['References']+= line
+                    if 'thebibliography' in line:
+                        beginReference = True
+
+            ### END: Parse the compiled HTML file ###
+
+        toCitate = getAllInside('\cite{','}',content)
+        ## Check if there is a new citation
+        changed = False
+        for citation in toCitate:
+            if not citation in self.references[docID]['keys']:
+                self.references[docID]['keys'][citation] = ''
+                changed = True
+        if changed:
+            makeReferences(docID)
+        for citation in toCitate:
+            content = content.replace(citation,self.references[docID]['keys'][citation])    
         return content
 
     def handleSections(self,content):
