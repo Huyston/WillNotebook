@@ -443,7 +443,7 @@ class WillNotebook(object):
             content = 'Error loading file. File not found.'
             output = content
             print('Error opening file. File does not exist!')
-            return '<center id="c1"><textarea id="1" action="evalCell" style="width: 800px; display: none;">'+content+'</textarea></center><center id="co1"><div id="o1" style="width: 800px; text-align: justify;">'+output+'</div></center>'
+            return '<center id="c1"><textarea id="1" action="evalCell" style="width: 800px; display: none;">'+content+'</textarea></center><center id="co1"><div id="o1" class="paragraph">'+output+'</div></center>'
         self.archive[docID] = pickle.load(archive)
         self.archive[docID]['Globals'] = {'section':section}
         archive.close()
@@ -461,12 +461,12 @@ class WillNotebook(object):
 
                     notebook += '<center id="c'+str(cell)+'"><form id="F'+str(cell)+'" enctype="multipart/form-data" method="POST" action="image" style="display: none;"><input type="file" name="img" value="Images/'+img+'" id="'+str(cell)+'" style="display: none;"><br>Label:<input name="label" value="'+label+'" id="L'+str(cell)+'"><br>Caption:<input name="caption" value="'+caption+'" id="C'+str(cell)+'"><br>Source:<input name="source" value="'+source+'" id="S'+str(cell)+'"></form></center>'
                     output = stuff['output']
-                    notebook += '<center tabindex="0" id="co'+str(cell)+'"><div id="o'+str(cell)+'" style="width: 800px; text-align: justify;">'+output+'</div></center>'
+                    notebook += '<center tabindex="0" id="co'+str(cell)+'"><div id="o'+str(cell)+'" class="paragraph">'+output+'</div></center>'
             else:
                 content = stuff['content']
                 output = stuff['output']
                 notebook += '<center id="c'+str(cell)+'"><textarea id="'+str(cell)+'" action="evalCell" style="width: 800px; display: none;">'+content+'</textarea></center>'
-                notebook += '<center tabindex="0" id="co'+str(cell)+'"><div id="o'+str(cell)+'" style="width: 800px; text-align: justify;">'+output+'</div></center>'
+                notebook += '<center tabindex="0" id="co'+str(cell)+'"><div id="o'+str(cell)+'" class="paragraph">'+output+'</div></center>'
         return notebook
 
 

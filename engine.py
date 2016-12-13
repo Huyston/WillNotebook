@@ -268,7 +268,7 @@ def handleInAltI(id):
     del document['co'+id]
     del document['c'+id]
     newInImg = CENTER(FORM([INPUT(type="file",name='img',id=id),BR(),'Label:',INPUT(name='label',id="L"+id),BR(),'Caption:',INPUT(name='caption',id="C"+id),BR(),'Source:',INPUT(name='source',id="S"+id)],id='F'+id,enctype="multipart/form-data",method="POST",action="image"),id="c"+id)
-    newOutCell = CENTER(DIV(style={'width':800,'height':200,'text-align':'justify'}, id='o'+id),id="co"+id,tabindex="0")
+    newOutCell = CENTER(DIV(Class="paragraph", id='o'+id),id="co"+id,tabindex="0")
     document['page'] <= newInImg
     document['page'] <= newOutCell
     bindShortcuts(newInImg)
@@ -343,7 +343,7 @@ def newCell():
     global page,cellCounter
     id = str(cellCounter)
     newInCell = CENTER(TEXTAREA(style={'width':800,'height':200},id=id,action="evalCell"),id="c"+id,Class="dontprint")
-    newOutCell = CENTER(DIV(style={'width':800,'height':200,'text-align':'justify'}, id='o'+id),id="co"+id,tabindex="0")
+    newOutCell = CENTER(DIV(Class="paragraph", id='o'+id),id="co"+id,tabindex="0")
     document['page'] <= newInCell
     document['page'] <= newOutCell
     bindShortcuts(newInCell)
