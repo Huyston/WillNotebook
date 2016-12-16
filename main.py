@@ -234,7 +234,7 @@ class WillNotebook(object):
 ''')
             refs = []
             for ref in self.references[docID]['keys']:
-                citations.write(ref+'\n')
+                citations.write(ref+'\n\n')
                 refs.append(ref)
             citations.write('''\\bibliography{database}
 \end{document}''')
