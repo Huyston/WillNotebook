@@ -40,6 +40,13 @@ def getAllInside(first,last,content):
         content = content.replace(key,'')
     return valuesDict
 
+def getInside(first,last,content):
+    f = content.index(first)
+    l = content[f+len(first):].index(last)
+    key = content[f:f+len(first)+l+len(last)]
+    value = key.replace(first,'').replace(last,'')
+    return value
+
 def startWith(text,content):
     return content.replace('\n','').replace(' ','')[:len(text)] == text
 
@@ -278,14 +285,15 @@ class WillNotebook(object):
             else:
                 break
         heading = ''
-        labelFlag = False
         for line in content.split('\n'):
             if '!#' in line:
-                label = line.replace('!'+'#'*n+' ','')
-                labelFlag = True
+                label = line.replace('!'+'#'*n,'')
+                if label:
+                    if label[0] == ' ':
+                        label = label[1:]
             else:
                 heading += line
-        if labelFlag:
+        if label:
             return '<h'+str(n)+' id="'+label+'">'+heading+'</h'+str(n)+'>'
         else:
             return '<h'+str(n)+'>'+heading+'</h'+str(n)+'>'
@@ -373,9 +381,14 @@ class WillNotebook(object):
             if '<h' in cell['output']:
                 for level in range(1,6):
                     n = str(level)
-                    if '<h'+n+'>' in cell['output']:
-                        title = next(iter(getAllInside('<h'+n+'>','</h'+n+'>',cell['output']).values()))
-                        exporter.addHeading(title,level)
+                    if '<h'+n in cell['output']:
+                        label = ''
+                        endTag = '>'
+                        if 'id="' in cell['output']:
+                            label = getInside('id="','"',cell['output'])
+                            endTag = ' id="'+label+'">'
+                        title = next(iter(getAllInside('<h'+n+endTag,'</h'+n+'>',cell['output']).values()))
+                        exporter.addHeading(title,level,label)
                         break
             elif 'class="dontprint"' in cell['output']:
                 show = False

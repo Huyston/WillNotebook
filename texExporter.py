@@ -16,6 +16,13 @@ def getAllInside(first,last,content):
         content = content.replace(key,'')
     return valuesDict
 
+def getInside(first,last,content):
+    f = content.index(first)
+    l = content[f+len(first):].index(last)
+    key = content[f:f+len(first)+l+len(last)]
+    value = key.replace(first,'').replace(last,'')
+    return value
+
 class TexExporter():
     def __init__(self,filename,docType):
         self.document = open(os.getcwd()+'/Archieves/'+filename+'.tex','w')
@@ -66,12 +73,16 @@ class TexExporter():
         formatedText = self.formatText(text)
         self.document.write(formatedText+'\n')
 
-    def addHeading(self,title,level):
+    def addHeading(self,title,level,label):
         section = {1:'\chapter{',2:'\section{',3:'\subsection{',4:'\subsubsection{',5:'\paragraph{'}
         formatedTitle = self.formatText(title)
         if self.docType == 'article':
             level += 1
-        tex = section[level]+formatedTitle+'}'
+        if label:
+            end = '}\label{'+label+'}'
+        else:
+            end = '}'
+        tex = section[level]+formatedTitle+end
         self.document.write(tex+'\n\n')
 
     def addFigure(self,img,caption,source=None,label=None):
