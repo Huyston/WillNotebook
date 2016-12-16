@@ -132,6 +132,8 @@ class WillNotebook(object):
                 output = self.handleEquations(content)
             elif startWith('!title',content):
                 output = self.handleTitle(content)
+            elif startWith('!ref',content):
+                output = self.handleReferences(docID,content)
             else:
                 output = content
         if emptyLine(output):
@@ -242,7 +244,7 @@ class WillNotebook(object):
             call(['htlatex','cit.tex'],cwd=os.getcwd()+'/Archieves/')
             ### END: Make the tex file and compile it ###
             ### Parse the compiled HTML file ###
-            html = open(os.getcwd()+'/Archieves/cit.html','r')
+            html = open(os.getcwd()+'/Archieves/cit.html','r',errors='replace',encoding='latin1')
             n = 0
             beginReference = False
             for line in html:
@@ -275,6 +277,11 @@ class WillNotebook(object):
         for citation in toCitate:
             content = content.replace(citation,self.references[docID]['keys'][citation])    
         return content
+
+    def handleReferences(self,docID,content):
+        output = '<h1>References</h1>\n'
+        output += self.references[docID]['References']
+        return output
 
     def handleSections(self,content):
         n = 1 #number of #'s in the section mark
