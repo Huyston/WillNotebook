@@ -1,22 +1,26 @@
 .paragraph {
-width: 800px;
-text-align: justify;
-line-height: 1.5;
-text-indent: 50px;
-margin-bottom: 10px;
+    width: 800px;
+    text-align: justify;
+    line-height: 1.5;
+    text-indent: 50px;
+    margin-bottom: 10px;
 }
 h1 {
-text-indent: 0;  
+    text-indent: 0;  
 }
 h2 {
-text-indent: 0;  
+    text-indent: 0;  
 }
 h3 {
-text-indent: 0;  
+    text-indent: 0;  
 }
 h4 {
-text-indent: 0;  
+    text-indent: 0;  
 }
 h5 {
-text-indent: 0;  
+    text-indent: 0;  
+}
+
+.ecti-1000 {
+    font-weight: bold;
 }
