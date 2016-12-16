@@ -46,7 +46,7 @@ class TexExporter():
 
     def formatText(self,text):
         '''handle bold, italic, etc '''
-        content = text
+        content = text.replace('\\sec{','\\ref{').replace('\\fig{','\\ref{').replace('\\eq{','\\ref{')
         if '<b>' in text:
             toBold = getAllInside('<b>','</b>',text)
             for bold in toBold:
