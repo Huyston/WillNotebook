@@ -48,11 +48,46 @@ class DocxExporter():
                 text = text.replace(code,'\lstinline{'+codes[code]+'}')
             content = text
         return content'''
-        return text
+        if text:
+            p = self.document.add_paragraph()
+            textBuffer = ''
+            italic = False
+            bold = False
+            for letter in text:
+                textBuffer += letter
+                if '<i>' in textBuffer:
+                    runText = textBuffer.replace('<i>','')
+                    r = p.add_run(runText)
+                    r.italic = italic
+                    r.bold = bold
+                    textBuffer = ''
+                    italic = True
+                elif '</i>' in textBuffer:
+                    runText = textBuffer.replace('</i>','')
+                    r = p.add_run(runText)
+                    r.italic = italic
+                    r.bold = bold
+                    textBuffer = ''
+                    italic = False
+                elif '<b>' in textBuffer:
+                    runText = textBuffer.replace('<b>','')
+                    r = p.add_run(runText)
+                    r.italic = italic
+                    r.bold = bold
+                    textBuffer = ''
+                    bold = True
+                elif '</b>' in textBuffer:
+                    runText = textBuffer.replace('</b>','')
+                    r = p.add_run(runText)
+                    r.italic = italic
+                    r.bold = bold
+                    textBuffer = ''
+                    bold = False
+            if textBuffer:
+                p.add_run(textBuffer)
 
     def addText(self,text):
-        formatedText = self.formatText(text)
-        self.document.add_paragraph(text)
+        self.formatText(text)
 
     def addHeading(self,title,level):
         formatedTitle = self.formatText(title)
