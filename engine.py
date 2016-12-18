@@ -505,11 +505,11 @@ def updateSectionNumbers():
             return tag+'<span>'+numbering+'</span>'+heading
 
     S,SS,SSS,SSSS,SSSSS = 0,0,0,0,0
+    document['pannel'].html = ''
     for id in page:
         html = document['o'+id].html
         if html:
             if '<h1' in html:
-                ## toDo fazer igual aki nos outros!!
                 S+=1
                 SS,SSS,SSSS,SSSSS = 0,0,0,0
                 if 'id="' in html:
@@ -519,6 +519,7 @@ def updateSectionNumbers():
                 else:
                     tag = '<h1>'
                 document['o'+id].html = replaceNumber(html,tag,str(S)+'. ')
+                document['pannel'].html += '<a href="#o'+id+'">'+replaceNumber(html,tag,str(S)+'. ').replace(tag,'').replace('</h1>','')+'</a>'
             elif '<h2' in html:
                 SS+=1
                 SSS,SSSS,SSSSS = 0,0,0
@@ -529,6 +530,7 @@ def updateSectionNumbers():
                 else:
                     tag = '<h2>'
                 document['o'+id].html = replaceNumber(html,tag,str(S)+'.'+str(SS)+'. ')
+                document['pannel'].html += replaceNumber(html,tag,str(S)+'. '+str(SS)+'. ')
             elif '<h3' in html:
                 SSS+=1
                 SSSS,SSSSS = 0,0

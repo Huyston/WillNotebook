@@ -45,3 +45,13 @@ body {
 .menu:hover ~ #page {
     transform: rotateX(0deg) translateY(140px);
 }
+#pannel {
+    height: 100%;
+    width: calc((100% - 800px) / 2 - 50px);
+    position:fixed;
+    z-index: 1;
+    top: 200px;
+    left: 10px;
+    background-color: lightblue;
+    overflow: scroll;
+}
