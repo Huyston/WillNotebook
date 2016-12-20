@@ -396,7 +396,12 @@ class WillNotebook(object):
                             endTag = ' id="'+label+'">'
                         title = getInside('<h'+n+endTag,'</h'+n+'>',cell['output'])
                         exporter.addHeading(title,level,label)
-                        break
+                        ### cells that have more than only a title. E.g. References
+                        remaining = cell['output'].replace('<h'+n+endTag,'').replace('</h'+n+'>','').replace(title,'')
+                        if remaining:
+                            exporter.addText(remaining)
+                        else:
+                            break
             elif 'class="dontprint"' in cell['output']:
                 show = False
             ### special cells ###

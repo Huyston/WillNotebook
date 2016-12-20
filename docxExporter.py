@@ -18,6 +18,13 @@ def getAllInside(first,last,content):
         content = content.replace(key,'')
     return valuesDict
 
+def getInside(first,last,content):
+    f = content.index(first)
+    l = content[f+len(first):].index(last)
+    key = content[f:f+len(first)+l+len(last)]
+    value = key.replace(first,'').replace(last,'')
+    return value
+
 class DocxExporter():
     def __init__(self,filename,docType):
         self.filename = filename
@@ -54,6 +61,7 @@ class DocxExporter():
             bold = False
             for letter in text:
                 textBuffer += letter
+                textBuffer = textBuffer.replace('\n',' ')
                 if '<i>' in textBuffer:
                     runText = textBuffer.replace('<i>','')
                     r = p.add_run(runText)
@@ -82,6 +90,37 @@ class DocxExporter():
                     r.bold = bold
                     textBuffer = ''
                     bold = False
+                elif '</p>' in textBuffer:
+                    print('entrou no ref')
+                    ### This happens when a reference is written
+                    ### Normally the reference is between </a> and </p>
+                    reference = getInside('</a>','</p>',textBuffer).replace('&#x00A0;',' ').replace('&#8211;','-')
+                    print(reference)
+                    refBuffer = ''
+                    p = self.document.add_paragraph()
+                    for letter in reference:
+                        refBuffer += letter
+                        if 'class="ecti-1000">' in refBuffer:
+                            initEmphasis = '<span'+getInside('<span','class="ecti-1000">',refBuffer)+'class="ecti-1000">'
+                            runText = refBuffer.replace(initEmphasis,'')
+                            r = p.add_run(runText)
+                            r.italic = italic
+                            r.bold = bold
+                            refBuffer = ''
+                            bold = True
+                            print('Adding non bold')
+                        elif '</span>' in refBuffer:
+                            runText = refBuffer.replace('</span>','')
+                            r = p.add_run(runText)
+                            r.italic = italic
+                            r.bold = bold
+                            refBuffer = ''
+                            bold = False
+                            print('Adding bold')
+                    if refBuffer:
+                        p.add_run(refBuffer)
+                    textBuffer = ''
+
             if textBuffer:
                 p.add_run(textBuffer)
 
