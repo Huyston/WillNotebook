@@ -30,6 +30,7 @@ class DocxExporter():
         self.filename = filename
         self.document = Document()
         self.docType = docType
+        self.figNumber = 1
 
     def formatText(self,text,p):
         '''handle bold, italic, etc '''
@@ -133,7 +134,17 @@ class DocxExporter():
         self.formatText(title,p)
 
     def addFigure(self,img,caption,source=None,label=None):
-        pass
+        size = 1
+        cap = self.document.add_paragraph('Fig. '+str(self.figNumber)+': '+caption,'Caption')
+        cap.alignment = 1
+        para = self.document.add_paragraph()
+        run = para.add_run()
+        run.add_picture(img)#,width=int(size*Inches(5.75)))
+        para.alignment = 1
+        sou = self.document.add_paragraph('Source: '+source,'Caption')
+        sou.alignment = 1
+        self.figNumber += 1
+        self.document.add_paragraph() #pula linha
 
     def close(self):
         self.document.save(os.getcwd()+'/Archieves/'+self.filename+'.docx')
