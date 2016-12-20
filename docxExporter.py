@@ -24,7 +24,7 @@ class DocxExporter():
         self.document = Document()
         self.docType = docType
 
-    def formatText(self,text):
+    def formatText(self,text,p):
         '''handle bold, italic, etc '''
         '''content = text
         if '<b>' in text:
@@ -49,7 +49,6 @@ class DocxExporter():
             content = text
         return content'''
         if text:
-            p = self.document.add_paragraph()
             textBuffer = ''
             italic = False
             bold = False
@@ -87,11 +86,12 @@ class DocxExporter():
                 p.add_run(textBuffer)
 
     def addText(self,text):
-        self.formatText(text)
+        p = self.document.add_paragraph()
+        self.formatText(text,p)
 
-    def addHeading(self,title,level):
-        formatedTitle = self.formatText(title)
-        self.document.add_heading(formatedTitle,level=level)
+    def addHeading(self,title,level,label):
+        p = self.document.add_heading(level=level)
+        self.formatText(title,p)
 
     def addFigure(self,img,caption,source=None,label=None):
         pass

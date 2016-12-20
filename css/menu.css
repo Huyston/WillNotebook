@@ -46,12 +46,17 @@ body {
     transform: rotateX(0deg) translateY(140px);
 }
 #pannel {
-    height: 100%;
+    height: calc(100% - 200px);
     width: calc((100% - 800px) / 2 - 50px);
     position:fixed;
     z-index: 1;
-    top: 200px;
-    left: 10px;
+    top: 150px;
+    left: calc( (0 - 1) * ((100% - 800px) / 2 - 80px) );
     background-color: lightblue;
     overflow: scroll;
+    transition: all 0.5s ease;
+}
+
+#pannel:hover {
+    transform: translateX(calc( 100% - 28px) );
 }

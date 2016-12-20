@@ -391,10 +391,10 @@ class WillNotebook(object):
                     if '<h'+n in cell['output']:
                         label = ''
                         endTag = '>'
-                        if 'id="' in cell['output']:
+                        if '<h'+n+' id="' in cell['output']:
                             label = getInside('id="','"',cell['output'])
                             endTag = ' id="'+label+'">'
-                        title = next(iter(getAllInside('<h'+n+endTag,'</h'+n+'>',cell['output']).values()))
+                        title = getInside('<h'+n+endTag,'</h'+n+'>',cell['output'])
                         exporter.addHeading(title,level,label)
                         break
             elif 'class="dontprint"' in cell['output']:

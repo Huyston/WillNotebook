@@ -504,6 +504,10 @@ def updateSectionNumbers():
             print('Else: ',heading)
             return tag+'<span>'+numbering+'</span>'+heading
 
+    def clearHeading(html,endTag):
+        '''Remove all after the endTag'''
+        return html[:html.index(endTag)+len(endTag)]
+
     S,SS,SSS,SSSS,SSSSS = 0,0,0,0,0
     document['pannel'].html = ''
     for id in page:
@@ -519,7 +523,7 @@ def updateSectionNumbers():
                 else:
                     tag = '<h1>'
                 document['o'+id].html = replaceNumber(html,tag,str(S)+'. ')
-                document['pannel'].html += '<a href="#o'+id+'">'+replaceNumber(html,tag,str(S)+'. ').replace(tag,'').replace('</h1>','')+'</a>'
+                document['pannel'].html += '<a class="pannelItem" href="#o'+id+'">'+clearHeading(replaceNumber(html,tag,str(S)+'. '),'</h1>').replace(tag,'')+'</a><br>'
             elif '<h2' in html:
                 SS+=1
                 SSS,SSSS,SSSSS = 0,0,0
