@@ -368,7 +368,8 @@ def eval(id):
     outIndex = str(id)
     print('OutIndex ',outIndex)
     if document[id].tagName == 'TEXTAREA':
-        send(document[str(id)].value)
+        content = document[id].value
+        send(content)
         document[id].style.display = 'none'
     else:
         img = document[id].files[0]
@@ -395,6 +396,13 @@ def receive(req):
         print('Receiving...',outIndex)
         if req.status==200 or req.status==0:
             print('Received: ',req.text)
+            if req.text[:12] == '!@StartRef@!' and '!@EndRef@!' in req.text:
+                ref = getInside('!@StartRef@!','!@EndRef@!',req.text)
+                req.text = req.text.replace('!@StartRef@!'+ref+'!@EndRef@!','')
+                refCell = getInside('cell="','"',ref)
+                ref = ref.replace('cell="'+refCell+'"','')
+                if refCell:
+                    document['o'+refCell].innerHTML =  ref
             document['o'+outIndex].innerHTML =  req.text
             updateSectionNumbers()
             handleReferences()
@@ -448,7 +456,17 @@ def sendDeleteCell(index):
     req.send({'docID':window.docID,'index':index})
 
 def ack(req):
-    print('ACK: ',req.text)
+    print('ACKasd: ',req.text)
+    try:
+        if '!@StartRef@!' in req.text and '!@EndRef@!' in req.text:
+            ref = getInside('!@StartRef@!','!@EndRef@!',req.text)
+            req.text = req.text.replace('!@StartRef@!'+ref+'!@EndRef@!','')
+            refCell = getInside('cell="','"',ref)
+            ref = ref.replace('cell="'+refCell+'"','')
+            if refCell:
+                document['o'+refCell].innerHTML =  ref
+    except:
+        pass
 
 def renderFile(req):
     global page,cellCounter

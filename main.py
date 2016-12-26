@@ -80,7 +80,7 @@ class WillNotebook(object):
         #The globals can be used to perform Python default functions for WillNotebook
         #It is ignored in the save state, so only locals is saved in the document
         self.archive[docID] = {'Globals':{'section':section},'Locals':{},'page':[]}
-        self.references[docID] = {'keys':{},'References':''}
+        self.references[docID] = {'keys':{},'counts':{},'References':'','refCell':''}
         return notebook
 
     @cherrypy.expose
@@ -94,19 +94,79 @@ class WillNotebook(object):
         index = int(index)
         print('Delete cell called')
         print('Index: ',index)
-        if 'type' in self.archive[docID]['page'][index]['content']:
-            if self.archive[docID]['page'][index]['content']['type'] == 'image':
-                filename = self.archive[docID]['page'][index]['content']['img']
+        content = self.archive[docID]['page'][index]['content']
+        if 'type' in content:
+            if content['type'] == 'image':
+                filename = content['img']
                 os.remove(os.getcwd()+'/Archieves/Images/'+filename)
+        if startWith('!ref',content):
+            print('Deleting the refCell')
+            self.references[docID]['refCell'] = ''
+        changedRefs = False
+        if '\cite{' in content:
+            citations = getAllInside('\cite{','}',content)
+            for citation in citations:
+                print('Citation deletion: ', citation)
+                self.references[docID]['counts'][citation] -= content.count(citation)
+                print(self.references[docID]['counts'][citation])
+                if self.references[docID]['counts'][citation] == 0:
+                    del self.references[docID]['counts'][citation]
+                    del self.references[docID]['keys'][citation]
+                    changedRefs = True
+                    print('Citation removed')
+        refUpdate = ''
+        if changedRefs:
+            self.makeReferences(docID)
+            if self.references[docID]['refCell']:
+                refUpdate = '!@StartRef@!cell="'+str(self.references[docID]['refCell'])+'"'+self.handleReferences(docID)+'!@EndRef@!'
         self.archive[docID]['page'].pop(int(index))
-        return 'Cell deleted'
+        print('This is the update: ',refUpdate)
+        return refUpdate+'Cell deleted'
 
     @cherrypy.expose
     def evalCell(self,docID,cell,content):
         cell = int(cell)
         print(cell)
+        changedCitations = False
         if cell == len(self.archive[docID]['page']):
             self.archive[docID]['page'].append({'content':content,'output':'.'})
+        else:
+            ### Existing cell ###
+            ### Check if there was any citation and if it changed ###
+            citations = getAllInside('\cite{','}',content)
+            if not citations:
+                if 'citations' in self.archive[docID]['page'][cell]:
+                    changedCitations = True
+                    for citation in self.archive[docID]['page'][cell]['citations']:
+                        n = self.archive[docID]['page'][cell]['citations'][citation]
+                        self.references[docID]['counts'][citation] -= n
+                        print('Citation '+citation+' was removed from content')
+                        if self.references[docID]['counts'][citation] == 0:
+                            del self.references[docID]['counts'][citation]
+                            del self.references[docID]['keys'][citation]
+                            print('No more citation '+citation+' in document. Deleting...')
+                    del self.archive[docID]['page'][cell]['citations']
+            else:
+                if 'citations' in self.archive[docID]['page'][cell]:
+                    cellCitations = [i for i in self.archive[docID]['page'][cell]['citations'].keys()]
+                    for citation in cellCitations:
+                        if not citation in citations:
+                            print('Removing citation from counters')
+                            self.references[docID]['counts'][citation] -= self.archive[docID]['page'][cell]['citations'][citation]
+                            if self.references[docID]['counts'][citation] == 0:
+                                changedCitations = True
+                                del self.archive[docID]['page'][cell]['citations'][citation]
+                                del self.references[docID]['counts'][citation]
+                                del self.references[docID]['keys'][citation]
+                        else:
+                            print('Updating citation counters')
+                            oldN = self.archive[docID]['page'][cell]['citations'][citation]
+                            self.references[docID]['counts'][citation] -= oldN
+        refUpdate = ''
+        if changedCitations:
+            if self.references[docID]['refCell']:
+                self.makeReferences(docID)
+                refUpdate = '!@StartRef@!cell="'+str(self.references[docID]['refCell'])+'"'+self.handleReferences(docID)+'!@EndRef@!'
         self.archive[docID]['page'][cell]['content'] = content
         if startWith('#code',content):
             output = self.handlePythonCode(docID,content)
@@ -125,7 +185,7 @@ class WillNotebook(object):
                 print('Italic parts')
                 content = self.handleItalics(content)
             if '\cite{' in content and '}' in content:
-                content = self.handleCitations(docID,content)
+                content = self.handleCitations(docID,cell,content)
             if startWith('!#',content):
                 output = self.handleSections(content)
             elif startWith('!eq',content):
@@ -133,12 +193,15 @@ class WillNotebook(object):
             elif startWith('!title',content):
                 output = self.handleTitle(content)
             elif startWith('!ref',content):
-                output = self.handleReferences(docID,content)
+                output = self.handleReferences(docID,cell=cell)
             else:
                 output = content
         if emptyLine(output):
             output = self.emptyLineSymbol
         self.archive[docID]['page'][cell]['output'] = output
+        if not '!@StartRef@!' in content[:12]:
+            print('Modified citations and there is no citations in content')
+            output = refUpdate+output
         print('Out: ',output)
         return output
 
@@ -207,8 +270,7 @@ class WillNotebook(object):
             content = content.replace(expr,boldItalic)
         return content
 
-    def handleCitations(self,docID,content):
-        print('Citations working')
+    def makeReferences(self,docID):
         def getRef(line):
             print('Getting from: ',line)
             keyword = 'indent" >'
@@ -219,12 +281,11 @@ class WillNotebook(object):
                 reference = reference[1:]
             return reference
 
-        def makeReferences(docID):
-            '''Updates the references'''
-            self.references[docID]['References'] = ''
-            ### Make the tex file and compile it ###
-            citations = open(os.getcwd()+'/Archieves/cit.tex','w')
-            citations.write('''\\documentclass{article}
+        '''Updates the references'''
+        self.references[docID]['References'] = ''
+        ### Make the tex file and compile it ###
+        citations = open(os.getcwd()+'/Archieves/cit.tex','w')
+        citations.write('''\\documentclass{article}
 \\usepackage[T1]{fontenc}
 \\usepackage[utf8]{inputenc}
 \\usepackage[alf,abnt-etal-list=0,abnt-repeated-author-omit=no]{abntex2cite}
@@ -232,53 +293,70 @@ class WillNotebook(object):
 
 \\begin{document}
 ''')
-            refs = []
-            for ref in self.references[docID]['keys']:
-                citations.write(ref+'\n\n')
-                refs.append(ref)
-            citations.write('''\\bibliography{database}
+        refs = []
+        for ref in self.references[docID]['keys']:
+            citations.write(ref+'\n\n')
+            refs.append(ref)
+        citations.write('''\\bibliography{database}
 \end{document}''')
-            citations.close()
-            call(['htlatex','cit.tex'],cwd=os.getcwd()+'/Archieves/')
-            call(['bibtex','cit.aux'],cwd=os.getcwd()+'/Archieves/')
-            call(['htlatex','cit.tex'],cwd=os.getcwd()+'/Archieves/')
-            ### END: Make the tex file and compile it ###
-            ### Parse the compiled HTML file ###
-            html = open(os.getcwd()+'/Archieves/cit.html','r',errors='replace',encoding='latin1')
-            n = 0
-            beginReference = False
-            for line in html:
-                ### Get citation ###
-                if n < len(refs):
-                    if 'class="noindent"' in line or 'class="indent"' in line:
-                        self.references[docID]['keys'][refs[n]] = getRef(line)
-                        n+=1
-                ### Get reference ###
-                else:
-                    ### Order of the if's is important
-                    if '</div>' in line:
-                        beginReference = False
-                    if beginReference:
-                        self.references[docID]['References']+= line
-                    if 'thebibliography' in line:
-                        beginReference = True
+        citations.close()
+        call(['htlatex','cit.tex'],cwd=os.getcwd()+'/Archieves/')
+        call(['bibtex','cit.aux'],cwd=os.getcwd()+'/Archieves/')
+        call(['htlatex','cit.tex'],cwd=os.getcwd()+'/Archieves/')
+        ### END: Make the tex file and compile it ###
+        ### Parse the compiled HTML file ###
+        html = open(os.getcwd()+'/Archieves/cit.html','r',errors='replace',encoding='latin1')
+        n = 0
+        beginReference = False
+        for line in html:
+            ### Get citation ###
+            if n < len(refs):
+                if 'class="noindent"' in line or 'class="indent"' in line:
+                    self.references[docID]['keys'][refs[n]] = getRef(line)
+                    n+=1
+            ### Get reference ###
+            else:
+                ### Order of the if's is important
+                if '</div>' in line:
+                    beginReference = False
+                if beginReference:
+                    self.references[docID]['References']+= line
+                if 'thebibliography' in line:
+                    beginReference = True
 
-            ### END: Parse the compiled HTML file ###
+        ### END: Parse the compiled HTML file ###
 
+    def handleCitations(self,docID,cell,content):
+        print('Citations working')
         toCitate = getAllInside('\cite{','}',content)
+        print('Citation list: ',toCitate)
         ## Check if there is a new citation
         changed = False
         for citation in toCitate:
             if not citation in self.references[docID]['keys']:
+                if not 'citations' in self.archive[docID]['page'][cell]:
+                    self.archive[docID]['page'][cell]['citations'] = {}
                 self.references[docID]['keys'][citation] = ''
+                self.archive[docID]['page'][cell]['citations'][citation] = content.count(citation)
+                self.references[docID]['counts'][citation] = content.count(citation)
                 changed = True
+                print('NEW REF ADDED')
+            else:
+                print('Adding')
+                self.references[docID]['counts'][citation] += content.count(citation)
+        refUpdate = ''
         if changed:
-            makeReferences(docID)
+            self.makeReferences(docID)
+            if self.references[docID]['refCell']:
+                refUpdate = '!@StartRef@!cell="'+str(self.references[docID]['refCell'])+'"'+self.handleReferences(docID)+'!@EndRef@!'
         for citation in toCitate:
             content = content.replace(citation,self.references[docID]['keys'][citation])    
-        return content
+        print('Content in citation is: ',content)
+        return refUpdate+content
 
-    def handleReferences(self,docID,content):
+    def handleReferences(self,docID,cell=None):
+        if cell:
+            self.references[docID]['refCell'] = cell
         output = '<h1>References</h1>\n'
         output += self.references[docID]['References']
         return output
