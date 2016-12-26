@@ -85,10 +85,10 @@ class TexExporter():
         tex = section[level]+formatedTitle+end
         self.document.write(tex+'\n\n')
 
-    def addFigure(self,img,caption,source=None,label=None):
+    def addFigure(self,img,caption,source='',label='',width='0.5'):
         figure = '''\\begin{figure}[!h]
 \centering
-\includegraphics{Images/'''+img+'''}
+\includegraphics[width='''+width+'''\\textwidth]{Images/'''+img+'''}
 \label{'''+label+'''}
 \caption{'''+caption+'''}
 Source: '''+source+'''

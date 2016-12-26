@@ -133,13 +133,13 @@ class DocxExporter():
         p = self.document.add_heading(level=level)
         self.formatText(title,p)
 
-    def addFigure(self,img,caption,source=None,label=None):
-        size = 1
+    def addFigure(self,img,caption,source='',label='',width='0.5'):
+
         cap = self.document.add_paragraph('Fig. '+str(self.figNumber)+': '+caption,'Caption')
         cap.alignment = 1
         para = self.document.add_paragraph()
         run = para.add_run()
-        run.add_picture(img)#,width=int(size*Inches(5.75)))
+        run.add_picture(os.getcwd()+'/Archieves/Images/'+img,width=int(float(width)*Inches(5.75)))
         para.alignment = 1
         sou = self.document.add_paragraph('Source: '+source,'Caption')
         sou.alignment = 1

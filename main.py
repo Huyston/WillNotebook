@@ -490,7 +490,8 @@ class WillNotebook(object):
                     caption = content['caption']
                     source = content['source']
                     label = content['label']
-                    exporter.addFigure(img,caption,source,label)
+                    width = str(int(content['width'].replace('px',''))/800.0)
+                    exporter.addFigure(img,caption,source=source,label=label,width=width)
                 else:
                     raise NotImplemented
             else:
@@ -500,27 +501,6 @@ class WillNotebook(object):
         print('ta no close')
         exporter.close()
         print('Acabou')
-
-    def saveAsDocx(self,docID,filename):
-        from docx import Document
-        from docx.shared import Inches
-        d = Document()
-        for cell in self.archive[docID]['page']:
-            content = cell['content']
-            if '!# ' in content:
-                d.add_heading(content.replace('!# ',''),level=1)
-            elif '!## ' in content:
-                d.add_heading(content.replace('!## ',''),level=2)
-            elif '!### ' in content:
-                d.add_heading(content.replace('!### ',''),level=3)
-            elif '!#### ' in content:
-                d.add_heading(content.replace('!#### ',''),level=4)
-            elif '!##### ' in content:
-                d.add_heading(content.replace('!##### ',''),level=5)
-            else:
-                d.add_paragraph(content)
-
-        d.save(os.getcwd()+'/Archieves/'+filename+'.docx')
 
     @cherrypy.expose
     def open(self,docID,toOpen):
