@@ -1,5 +1,5 @@
 from browser import document, alert, ajax, window
-from browser.html import TEXTAREA, CENTER, DIV, PRE, FORM, INPUT, BUTTON, BR
+from browser.html import TEXTAREA, CENTER, DIV, PRE, FORM, INPUT, BUTTON, BR, IMG
 
 jq = window.jQuery.noConflict(True)
 
@@ -263,14 +263,24 @@ def handleInAlt5(id):
     if not '!##### ' in document[id].value:
         document[id].value = '!##### ' + document[id].value
 
+def slider(ev):
+    previewId = ev.target.id.replace('SL','P')
+    print(document[previewId].style.width)
+    document[previewId].style.width = str(int(float(ev.target.value)*800.0))+'px'
+
+def previewImg(ev):
+    window.previewImg(ev,'P'+ev.target.id)
+
 def handleInAltI(id):
     global page,cellCounter
     del document['co'+id]
     del document['c'+id]
-    newInImg = CENTER(FORM([INPUT(type="file",name='img',id=id),BR(),'Label:',INPUT(name='label',id="L"+id),BR(),'Caption:',INPUT(name='caption',id="C"+id),BR(),'Source:',INPUT(name='source',id="S"+id)],id='F'+id,enctype="multipart/form-data",method="POST",action="image"),id="c"+id)
+    newInImg = CENTER(FORM([INPUT(type="file",name='img',id=id),BR(),'Label:',INPUT(name='label',id="L"+id),BR(),'Caption:',INPUT(name='caption',id="C"+id),BR(),'Source:',INPUT(name='source',id="S"+id),BR(),'Width: ',INPUT(id="SL"+id,type="range",max="1",min="0",step="0.01",name='width'),BR(),IMG(id="P"+id,style={'width':'400px'})],id='F'+id,enctype="multipart/form-data",method="POST",action="image"),id="c"+id)
     newOutCell = CENTER(DIV(Class="paragraph", id='o'+id),id="co"+id,tabindex="0")
     document['page'] <= newInImg
     document['page'] <= newOutCell
+    document['SL'+id].bind('change',slider)
+    document[id].bind('change',previewImg)
     bindShortcuts(newInImg)
     bindOutShortcuts(newOutCell)
     newInImg.bind('blur',lastFocus)
@@ -376,7 +386,8 @@ def eval(id):
         label = document['L'+id].value
         source = document['S'+id].value
         caption = document['C'+id].value
-        sendImg(img,label,source,caption)
+        width = document['SL'+id].value
+        sendImg(img,label,source,caption,width)
         document['F'+id].style.display = 'none'
         document[id].style.display = 'none'
     print('submitted')
@@ -432,8 +443,8 @@ def send(content):
     req.set_header('content-type','application/x-www-form-urlencoded')
     req.send({'docID':window.docID,'cell':page.index(outIndex),'content':content})
 
-def sendImg(img,label,source,caption):
-    window.uploadImg(window.docID,page.index(outIndex),img,label,source,caption)
+def sendImg(img,label,source,caption,width):
+    window.uploadImg(window.docID,page.index(outIndex),img,label,source,caption,width)
 
 def openFile(ev):
     toOpen = document['toOpen'].files[0]
@@ -484,6 +495,12 @@ def renderFile(req):
             page.append(str(cellCounter))
             print(page)
             cellCounter += 1
+        toBind = getAllInside('id="SL','"',req)
+        for imgId in toBind:
+            print('Binding to ',toBind[imgId])
+            sliderID = 'SL'+toBind[imgId]
+            document[sliderID].bind('change',slider)
+            document[toBind[imgId]].bind('change',previewImg)
         newCell()
         updateSectionNumbers()
         updateFigureNumbers()

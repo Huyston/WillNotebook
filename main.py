@@ -401,11 +401,12 @@ class WillNotebook(object):
         return '<center><b><font size="7">'+title+'</font></b></center><br><br>'
     
     @cherrypy.expose
-    def image(self,docID,cell,img,label,source,caption):
+    def image(self,docID,cell,img,label,source,caption,width):
         cell = int(cell)
         filename = img.filename
+        imgWidth = str(int(float(width)*800.0))+'px'
         if cell == len(self.archive[docID]['page']):
-            self.archive[docID]['page'].append({'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption},'output':'.'})
+            self.archive[docID]['page'].append({'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':'.'})
         i = open(os.getcwd()+'/Archieves/Images/'+filename,'wb')
         while True:
             data = img.file.read(4096)
@@ -416,9 +417,9 @@ class WillNotebook(object):
             print('Loading...')
         i.close()
         if label:
-            output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="max-width:800px" src="Archieves/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+            output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/Images/'+filename+'"><br>Source: '+source+'</center><br>'
         else:
-            output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="max-width:800px" src="Archieves/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+            output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/Images/'+filename+'"><br>Source: '+source+'</center><br>'
         self.archive[docID]['page'][cell]['output'] = output
         return output
 
@@ -562,7 +563,7 @@ class WillNotebook(object):
                     source = stuff['content']['source']
                     caption = stuff['content']['caption']
 
-                    notebook += '<center id="c'+str(cell)+'"><form id="F'+str(cell)+'" enctype="multipart/form-data" method="POST" action="image" style="display: none;"><input type="file" name="img" value="Images/'+img+'" id="'+str(cell)+'" style="display: none;"><br>Label:<input name="label" value="'+label+'" id="L'+str(cell)+'"><br>Caption:<input name="caption" value="'+caption+'" id="C'+str(cell)+'"><br>Source:<input name="source" value="'+source+'" id="S'+str(cell)+'"></form></center>'
+                    notebook += '<center id="c'+str(cell)+'"><form id="F'+str(cell)+'" enctype="multipart/form-data" method="POST" action="image" style="display: none;"><input type="file" name="img" value="Archieves/Images/'+img+'" id="'+str(cell)+'" style="display: none;"><br>Label:<input name="label" value="'+label+'" id="L'+str(cell)+'"><br>Caption:<input name="caption" value="'+caption+'" id="C'+str(cell)+'"><br>Source:<input name="source" value="'+source+'" id="S'+str(cell)+'"><br>Width:<input id="SL'+str(cell)+'"name="width" type="range" min="0" max="1" step="0.01"><br><img id="P'+str(cell)+'" src="Archieves/Images/'+img+'"></form></center>'
                     output = stuff['output']
                     notebook += '<center tabindex="0" id="co'+str(cell)+'"><div id="o'+str(cell)+'" class="paragraph">'+output+'</div></center>'
             else:
