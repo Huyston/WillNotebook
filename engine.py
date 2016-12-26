@@ -552,7 +552,7 @@ def updateSectionNumbers():
                 else:
                     tag = '<h2>'
                 document['o'+id].html = replaceNumber(html,tag,str(S)+'.'+str(SS)+'. ')
-                document['pannel'].html += replaceNumber(html,tag,str(S)+'. '+str(SS)+'. ')
+                document['pannel'].html += '<a class="pannelItem" href="#o'+id+'">'+clearHeading(replaceNumber(html,tag,str(S)+'. '+str(SS)+'. '),'</h2>').replace(tag,'')+'</a><br>'
             elif '<h3' in html:
                 SSS+=1
                 SSSS,SSSSS = 0,0
@@ -563,6 +563,7 @@ def updateSectionNumbers():
                 else:
                     tag = '<h3>'
                 document['o'+id].html = replaceNumber(html,tag,str(S)+'.'+str(SS)+'.'+str(SSS)+'. ')
+                document['pannel'].html += '<a class="pannelItem" href="#o'+id+'">'+clearHeading(replaceNumber(html,tag,str(S)+'. '+str(SS)+'. '+str(SSS)+'. '),'</h3>').replace(tag,'')+'</a><br>'
             elif '<h4' in html:
                 SSSS+=1
                 SSSSS = 0
@@ -573,6 +574,7 @@ def updateSectionNumbers():
                 else:
                     tag = '<h4>'
                 document['o'+id].html = replaceNumber(html,tag,str(S)+'.'+str(SS)+'.'+str(SSS)+'.'+str(SSSS)+'. ')
+                document['pannel'].html += '<a class="pannelItem" href="#o'+id+'">'+clearHeading(replaceNumber(html,tag,str(S)+'. '+str(SS)+'. '+str(SSS)+'. '+str(SSSS)+'. '),'</h4>').replace(tag,'')+'</a><br>'
             elif '<h5' in html:
                 SSSSS+=1
                 if 'id="' in html:
@@ -582,6 +584,7 @@ def updateSectionNumbers():
                 else:
                     tag = '<h5>'
                 document['o'+id].html = replaceNumber(html,tag,str(S)+'.'+str(SS)+'.'+str(SSS)+'.'+str(SSSS)+'.'+str(SSSSS)+'. ')
+                document['pannel'].html += '<a class="pannelItem" href="#o'+id+'">'+clearHeading(replaceNumber(html,tag,str(S)+'. '+str(SS)+'. '+str(SSS)+'. '+str(SSSS)+'. '+str(SSSSS)+'. '),'</h5>').replace(tag,'')+'</a><br>'
                 
 def updateFigureNumbers():
     global references
