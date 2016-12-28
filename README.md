@@ -9,19 +9,21 @@ WillNotebook is inspired by jupyter (notebook) project, but aims the specifics o
 ## What can I do with WillNotebook
 
 - Add titles, subtitles, etc
-- Add normal text
+- Add normal, bold, italic and both bold and italic text
 - Add python code and execute it within the document
 - Call python variables into the text
 - Add equations with latex and sympy
-- Reference equations in the text in the latex style
 - Add figures
+- Reference equations, sections and figures with automatic numbering
+- Automatic citation handling using .bib (using latex)
+- Automatic References creation (using latex)
 
 ## Export formats
 
 The default format is ".will" and it is the recommended format for holding all the information that WillNotebook needs. However you can export to other formats like:
 
 - .tex (clean LaTeX file)
-- .docx (Equations and Figures are not included yet)
+- .docx (Equations are not included yet)
 - .pdf (from pdflatex)
 - .pdf (from WillNotebook browser printing)
 
