@@ -202,7 +202,6 @@ class WillNotebook(object):
         if not '!@StartRef@!' in content[:12]:
             print('Modified citations and there is no citations in content')
             output = refUpdate+output
-        print('Out: ',output)
         return output
 
     def handlePythonCode(self,docID,content):
