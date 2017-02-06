@@ -14,10 +14,8 @@ except:
     print('No sympy installed')
 
 def section(text):
+    '''This is a test notebook python function'''
     print("<h1>"+text+"</h1>")
-
-#Globals = {'section':section}
-#Locals = {}
 
 def genRandomStr(length):
     chars = 'qwertyuiopasdfghjklzxcvbnm1234567890QWERTYUIOPASDFGHJKLZXCVBNM'
@@ -79,7 +77,7 @@ class WillNotebook(object):
         notebook = notebook.read().replace('!@docID@!',docID)
         #The globals can be used to perform Python default functions for WillNotebook
         #It is ignored in the save state, so only locals is saved in the document
-        self.archive[docID] = {'Globals':{'section':section},'Locals':{},'page':[]}
+        self.archive[docID] = {'Globals':{'section':section},'Locals':{},'page':[],'references':None}
         self.references[docID] = {'keys':{},'counts':{},'References':'','refCell':''}
         return notebook
 
@@ -437,6 +435,7 @@ class WillNotebook(object):
 
     def saveAsWill(self,docID,filename):
         archive = open(os.getcwd()+'/Archieves/'+filename+'.will','wb')
+        self.archive[docID]['references'] = self.references[docID]
         try:
             pickle.dump(self.archive[docID],archive)
         except Exception as e:
@@ -528,6 +527,7 @@ class WillNotebook(object):
             print('Error opening file. File does not exist!')
             return '<center id="c1"><textarea id="1" action="evalCell" style="width: 800px; display: none;">'+content+'</textarea></center><center id="co1"><div id="o1" class="paragraph">'+output+'</div></center>'
         self.archive[docID] = pickle.load(archive)
+        self.references[docID] = self.archive[docID]['references']
         self.archive[docID]['Globals'] = {'section':section}
         archive.close()
         notebook = ''
