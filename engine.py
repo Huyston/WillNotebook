@@ -476,6 +476,10 @@ def ack(req):
             ref = ref.replace('cell="'+refCell+'"','')
             if refCell:
                 document['o'+refCell].innerHTML =  ref
+        updateSectionNumbers()
+        updateFigureNumbers()
+        handleReferences() # this order is important. If it comes after mathjax, the \ref command gets evalluated by it first
+        window.math.reNumber()
     except:
         pass
 

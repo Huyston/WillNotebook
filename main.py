@@ -132,6 +132,7 @@ class WillNotebook(object):
             ### Existing cell ###
             ### Check if there was any citation and if it changed ###
             citations = getAllInside('\cite{','}',content)
+            print('citations: ',citations)
             if not citations:
                 if 'citations' in self.archive[docID]['page'][cell]:
                     changedCitations = True
@@ -196,10 +197,27 @@ class WillNotebook(object):
                 output = content
         if emptyLine(output):
             output = self.emptyLineSymbol
-        self.archive[docID]['page'][cell]['output'] = output
         if not '!@StartRef@!' in content[:12]:
             print('Modified citations and there is no citations in content')
             output = refUpdate+output
+        ## Store output without the ref updater tags ##
+        if '!@StartRef@!' in output:
+            print('output with ref: ',output)
+            refContent = getInside('!@StartRef@!','!@EndRef@!',output)
+            storeOutput = output.replace(refContent,'')
+            storeOutput = storeOutput.replace('!@StartRef@!','')
+            storeOutput = storeOutput.replace('!@EndRef@!','')
+            self.archive[docID]['page'][cell]['output'] = storeOutput
+        else:
+            self.archive[docID]['page'][cell]['output'] = output
+        print('References now: ',self.references[docID]['References'])
+        ## Update refcell content ##
+        if self.references[docID]['refCell']:
+            for n in range(len(self.archive[docID]['page'])):
+                if self.archive[docID]['page'][n]['content'] == '!ref':
+                    refCell = n
+            self.references[docID]['serverRefCell'] = refCell
+            self.archive[docID]['page'][refCell]['output'] = '<h1>References</h1>\n'+self.references[docID]['References']
         return output
 
     def handlePythonCode(self,docID,content):
@@ -528,6 +546,7 @@ class WillNotebook(object):
             return '<center id="c1"><textarea id="1" action="evalCell" style="width: 800px; display: none;">'+content+'</textarea></center><center id="co1"><div id="o1" class="paragraph">'+output+'</div></center>'
         self.archive[docID] = pickle.load(archive)
         self.references[docID] = self.archive[docID]['references']
+        self.references[docID]['refCell'] = self.references[docID]['serverRefCell']
         self.archive[docID]['Globals'] = {'section':section}
         archive.close()
         notebook = ''
