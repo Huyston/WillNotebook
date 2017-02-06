@@ -278,7 +278,7 @@ class WillNotebook(object):
             print('The ref is: ',reference)
             while ' ' in reference[0]:
                 reference = reference[1:]
-            return reference
+            return reference.replace('\n','')
 
         '''Updates the references'''
         self.references[docID]['References'] = ''
