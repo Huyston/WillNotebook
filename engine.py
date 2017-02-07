@@ -334,10 +334,12 @@ def newImageCell():
     global page,cellCounter
     try:
         id = str(cellCounter)
-        newInImg = CENTER(FORM([INPUT(type="file",name='img',id=id),BR(),'Label:',INPUT(name='label',id="L"+id),BR(),'Caption:',INPUT(name='caption',id="C"+id),BR(),'Source:',INPUT(name='source',id="S"+id)],id='F'+id,enctype="multipart/form-data",method="POST",action="image"),id="c"+id,Class="dontprint")
-        newOutCell = CENTER(DIV(style={'width':800,'height':200,'text-align':'justify'}, id='o'+id),id="co"+id,tabindex="0")
+        newInImg = CENTER(FORM([INPUT(type="file",name='img',id=id),BR(),'Label:',INPUT(name='label',id="L"+id),BR(),'Caption:',INPUT(name='caption',id="C"+id),BR(),'Source:',INPUT(name='source',id="S"+id),BR(),'Width: ',INPUT(id="SL"+id,type="range",max="1",min="0",step="0.01",name='width'),BR(),IMG(id="P"+id,style={'width':'400px'})],id='F'+id,enctype="multipart/form-data",method="POST",action="image"),id="c"+id)
+        newOutCell = CENTER(DIV(Class="paragraph", id='o'+id),id="co"+id,tabindex="0")
         document['page'] <= newInImg
         document['page'] <= newOutCell
+        document['SL'+id].bind('change',slider)
+        document[id].bind('change',previewImg)
         bindShortcuts(newInImg)
         bindOutShortcuts(newOutCell)
         newInImg.bind('blur',lastFocus)
