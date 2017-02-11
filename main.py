@@ -546,7 +546,10 @@ class WillNotebook(object):
             return '<center id="c1"><textarea id="1" action="evalCell" style="width: 800px; display: none;">'+content+'</textarea></center><center id="co1"><div id="o1" class="paragraph">'+output+'</div></center>'
         self.archive[docID] = pickle.load(archive)
         self.references[docID] = self.archive[docID]['references']
-        self.references[docID]['refCell'] = self.references[docID]['serverRefCell']
+        if 'serverRefCell' in self.references[docID]:
+            self.references[docID]['refCell'] = self.references[docID]['serverRefCell']
+        else:
+            self.references[docID]['refCell'] = None
         self.archive[docID]['Globals'] = {'section':section}
         archive.close()
         notebook = ''
