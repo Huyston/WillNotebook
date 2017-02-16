@@ -417,23 +417,58 @@ class WillNotebook(object):
     
     @cherrypy.expose
     def image(self,docID,cell,img,label,source,caption,width):
+        def loadImg(filename):
+            i = open(os.getcwd()+'/Archieves/Images/'+filename,'wb')
+            while True:
+                data = img.file.read(4096)
+                if not data:
+                    break
+                else:
+                    i.write(data)
+                print('Loading...')
+            i.close()
         cell = int(cell)
-        filename = img.filename
         imgWidth = str(int(float(width)*800.0))+'px'
+        if not type(img) == str:
+            filename = img.filename
+        else:
+            filename = None
+            print('No filename. Checking if it is just an update')
+            try:
+                filename = self.archive[docID]['page'][cell]['content']['img']
+            except:
+                print('Its not update. User forgot to enter img')
+                output = '<font class="dontprint" color="red">Warning, no image was inserted. Please try again.</font>'
+                if cell == len(self.archive[docID]['page']):
+                    self.archive[docID]['page'].append({'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':output})
+                return output
+            print('Its update. Using filename: ',filename)
+
         if cell == len(self.archive[docID]['page']):
             self.archive[docID]['page'].append({'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':'.'})
         else:
             # existing cell
-            self.archive[docID]['page'][cell] = {'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':'.'}
-        i = open(os.getcwd()+'/Archieves/Images/'+filename,'wb')
-        while True:
-            data = img.file.read(4096)
-            if not data:
-                break
+            if 'type' in self.archive[docID]['page'][cell]['content']:
+                if self.archive[docID]['page'][cell]['content']['type'] == 'image':
+                    # Updating image cell
+                    print('Updating image!')
+                    if not filename == self.archive[docID]['page'][cell]['content']['img']:
+                        print('There should be an filename: ',filename)
+                        loadImg(filename)
+                    elif self.archive[docID]['page'][cell]['content']['img'] == None:
+                        return '<font class="dontprint" color="red">Warning, no image was inserted. Please try again.</font>'
+                    self.archive[docID]['page'][cell]['content']['img'] = filename
+                    self.archive[docID]['page'][cell]['content']['label'] = label
+                    self.archive[docID]['page'][cell]['content']['source'] = source
+                    self.archive[docID]['page'][cell]['content']['caption'] = caption
+                    self.archive[docID]['page'][cell]['content']['width'] = width
             else:
-                i.write(data)
-            print('Loading...')
-        i.close()
+                if filename:
+                    loadImg(filename)
+                else:
+                    return '<font class="dontprint" color="red">Warning, no image was inserted. Please try again.</font>'
+                    
+                self.archive[docID]['page'][cell] = {'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':'.'}
         if label:
             output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/Images/'+filename+'"><br>Source: '+source+'</center><br>'
         else:

@@ -38,6 +38,7 @@ function uploadImg(docID,cell,file,label,source,caption,width){
             receiveImg(xhr.responseText); // handle response.
         }
     };
+    console.log('Attaching files...')
     fd.append("docID", docID);
     fd.append("cell", cell);
     fd.append("img", file);
@@ -45,6 +46,7 @@ function uploadImg(docID,cell,file,label,source,caption,width){
     fd.append("source", source);
     fd.append("caption", caption);
     fd.append("width", width);
+    console.log('Done. Sending to the server...')
     xhr.send(fd);
 }
 function uploadFile(docID,toOpen){

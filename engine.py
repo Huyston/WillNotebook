@@ -138,7 +138,7 @@ def handleShiftEnter(id):
     try:
         eval(id)
     except Exception as e:
-        print('Exception: ',e)
+        print('Exception ShiftEnter: ',e)
 
 def handleAltN(id):
     print('Insert after ',id)
@@ -374,7 +374,10 @@ def eval(id):
         send(content)
         document[id].style.display = 'none'
     else:
-        img = document[id].files[0]
+        if document[id].files.length:
+            img = document[id].files[0]
+        else:
+            img = None
         label = document['L'+id].value
         source = document['S'+id].value
         caption = document['C'+id].value
@@ -418,6 +421,7 @@ def receive(req):
 def receiveImg(req):
     # Receiving the server handler output as req.text
     global outIndex
+    print('Receiving img...')
     try:
         print('Receiving...',outIndex)
         document['o'+outIndex].innerHTML = req
@@ -425,7 +429,7 @@ def receiveImg(req):
         handleReferences()
         print('o'+outIndex)
     except Exception as e:
-        print('Exception: ',e)
+        print('Exception in recvImg: ',e)
 
 def send(content):
     # Sends the cell content to the server handlers
@@ -436,6 +440,7 @@ def send(content):
     req.send({'docID':window.docID,'cell':page.index(outIndex),'content':content})
 
 def sendImg(img,label,source,caption,width):
+    print('Sending img...')
     window.uploadImg(window.docID,page.index(outIndex),img,label,source,caption,width)
 
 def openFile(ev):
