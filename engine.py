@@ -273,19 +273,9 @@ def previewImg(ev):
 
 def handleInAltI(id):
     global page,cellCounter
-    del document['co'+id]
-    del document['c'+id]
-    newInImg = CENTER(FORM([INPUT(type="file",name='img',id=id),BR(),'Label:',INPUT(name='label',id="L"+id),BR(),'Caption:',INPUT(name='caption',id="C"+id),BR(),'Source:',INPUT(name='source',id="S"+id),BR(),'Width: ',INPUT(id="SL"+id,type="range",max="1",min="0",step="0.01",name='width'),BR(),IMG(id="P"+id,style={'width':'400px'})],id='F'+id,enctype="multipart/form-data",method="POST",action="image"),id="c"+id)
-    newOutCell = CENTER(DIV(Class="paragraph", id='o'+id),id="co"+id,tabindex="0")
-    document['page'] <= newInImg
-    document['page'] <= newOutCell
-    document['SL'+id].bind('change',slider)
-    document[id].bind('change',previewImg)
-    bindShortcuts(newInImg)
-    bindOutShortcuts(newOutCell)
-    newInImg.bind('blur',lastFocus)
-    newOutCell.bind('blur',lastFocus)
-    document[id].focus()
+    upId = page[page.index(id)-1]
+    handleShiftDelete(id)
+    handleOutAltI(upId)
 
 def handleOutAltC(id):
     handleAltN(id)

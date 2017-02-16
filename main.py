@@ -422,6 +422,9 @@ class WillNotebook(object):
         imgWidth = str(int(float(width)*800.0))+'px'
         if cell == len(self.archive[docID]['page']):
             self.archive[docID]['page'].append({'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':'.'})
+        else:
+            # existing cell
+            self.archive[docID]['page'][cell] = {'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':'.'}
         i = open(os.getcwd()+'/Archieves/Images/'+filename,'wb')
         while True:
             data = img.file.read(4096)
@@ -563,8 +566,9 @@ class WillNotebook(object):
                     label = stuff['content']['label']
                     source = stuff['content']['source']
                     caption = stuff['content']['caption']
+                    width = stuff['content']['width']
 
-                    notebook += '<center id="c'+str(cell)+'"><form id="F'+str(cell)+'" enctype="multipart/form-data" method="POST" action="image" style="display: none;"><input type="file" name="img" value="Archieves/Images/'+img+'" id="'+str(cell)+'" style="display: none;"><br>Label:<input name="label" value="'+label+'" id="L'+str(cell)+'"><br>Caption:<input name="caption" value="'+caption+'" id="C'+str(cell)+'"><br>Source:<input name="source" value="'+source+'" id="S'+str(cell)+'"><br>Width:<input id="SL'+str(cell)+'"name="width" type="range" min="0" max="1" step="0.01"><br><img id="P'+str(cell)+'" src="Archieves/Images/'+img+'"></form></center>'
+                    notebook += '<center id="c'+str(cell)+'"><form id="F'+str(cell)+'" enctype="multipart/form-data" method="POST" action="image" style="display: none;"><input type="file" name="img" value="Archieves/Images/'+img+'" id="'+str(cell)+'" style="display: none;"><br>Label:<input name="label" value="'+label+'" id="L'+str(cell)+'"><br>Caption:<input name="caption" value="'+caption+'" id="C'+str(cell)+'"><br>Source:<input name="source" value="'+source+'" id="S'+str(cell)+'"><br>Width:<input id="SL'+str(cell)+'"name="width" type="range" min="0" max="1" step="0.01" value="'+width.replace('px','')+'"><br><img id="P'+str(cell)+'" src="Archieves/Images/'+img+'" style="width:'+width+'"></form></center>'
                     output = stuff['output']
                     notebook += '<center tabindex="0" id="co'+str(cell)+'"><div id="o'+str(cell)+'" class="paragraph">'+output+'</div></center>'
             else:
