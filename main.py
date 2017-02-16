@@ -446,6 +446,7 @@ class WillNotebook(object):
 
         if cell == len(self.archive[docID]['page']):
             self.archive[docID]['page'].append({'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':'.'})
+            loadImg(filename)
         else:
             # existing cell
             if 'type' in self.archive[docID]['page'][cell]['content']:

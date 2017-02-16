@@ -273,9 +273,13 @@ def previewImg(ev):
 
 def handleInAltI(id):
     global page,cellCounter
-    upId = page[page.index(id)-1]
-    handleShiftDelete(id)
+    if id == 'c0':
+        upId = 0
+    else:
+        upId = page[page.index(id)-1]
     handleOutAltI(upId)
+    handleShiftDelete(id)
+    document[str(cellCounter-1)].focus()
 
 def handleOutAltC(id):
     handleAltN(id)
