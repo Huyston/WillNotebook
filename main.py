@@ -102,18 +102,20 @@ class WillNotebook(object):
             self.references[docID]['refCell'] = ''
         changedRefs = False
         if '\cite{' in content:
+            print('Counts: ',self.references[docID]['counts'])
             citations = getAllInside('\cite{','}',content)
             for citation in citations:
                 print('Citation deletion: ', citation)
                 citationList = getInside('\cite{','}',citation).split(',')
                 for individual in citationList:
                     self.references[docID]['counts'][individual] -= content.count(citation)
-                if self.references[docID]['counts'][individual] == 0:
-                    del self.references[docID]['counts'][individual]
-                    if citation in self.references[docID]['keys']:
-                        del self.references[docID]['keys'][citation]
-                    changedRefs = True
-                    print('Citation removed')
+                    if self.references[docID]['counts'][individual] == 0:
+                        del self.references[docID]['counts'][individual]
+                        print('Deleting ',individual)
+                        if citation in self.references[docID]['keys']:
+                            del self.references[docID]['keys'][citation]
+                        changedRefs = True
+                        print('Citation removed')
         refUpdate = ''
         if changedRefs:
             self.makeReferences(docID)
@@ -366,7 +368,9 @@ class WillNotebook(object):
                 self.archive[docID]['page'][cell]['citations'][citation] = content.count(citation)
                 citationList = getInside('\cite{','}',citation).split(',')
                 for individual in citationList:
-                    self.references[docID]['counts'][individual] = content.count(citation)
+                    if not individual in self.references[docID]['counts']:
+                        self.references[docID]['counts'][individual] = 0
+                    self.references[docID]['counts'][individual] += content.count(citation)
                 changed = True
                 print('NEW REF ADDED')
             else:
