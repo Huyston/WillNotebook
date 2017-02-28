@@ -105,11 +105,13 @@ class WillNotebook(object):
             citations = getAllInside('\cite{','}',content)
             for citation in citations:
                 print('Citation deletion: ', citation)
-                self.references[docID]['counts'][citation] -= content.count(citation)
-                print(self.references[docID]['counts'][citation])
-                if self.references[docID]['counts'][citation] == 0:
-                    del self.references[docID]['counts'][citation]
-                    del self.references[docID]['keys'][citation]
+                citationList = getInside('\cite{','}',citation).split(',')
+                for individual in citationList:
+                    self.references[docID]['counts'][individual] -= content.count(citation)
+                if self.references[docID]['counts'][individual] == 0:
+                    del self.references[docID]['counts'][individual]
+                    if citation in self.references[docID]['keys']:
+                        del self.references[docID]['keys'][citation]
                     changedRefs = True
                     print('Citation removed')
         refUpdate = ''
