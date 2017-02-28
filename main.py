@@ -132,18 +132,20 @@ class WillNotebook(object):
             ### Existing cell ###
             ### Check if there was any citation and if it changed ###
             citations = getAllInside('\cite{','}',content)
-            print('citations: ',citations)
             if not citations:
                 if 'citations' in self.archive[docID]['page'][cell]:
                     changedCitations = True
                     for citation in self.archive[docID]['page'][cell]['citations']:
                         n = self.archive[docID]['page'][cell]['citations'][citation]
-                        self.references[docID]['counts'][citation] -= n
-                        print('Citation '+citation+' was removed from content')
-                        if self.references[docID]['counts'][citation] == 0:
-                            del self.references[docID]['counts'][citation]
-                            del self.references[docID]['keys'][citation]
-                            print('No more citation '+citation+' in document. Deleting...')
+                        citationList = getInside('\cite{','}',citation).split(',')
+                        for individual in citationList:
+                            self.references[docID]['counts'][individual] -= n
+                            print('Citation '+individual+' was removed from content')
+                            if self.references[docID]['counts'][individual] == 0:
+                                del self.references[docID]['counts'][individual]
+                                print('No more citation '+citation+' in document. Deleting...')
+                                if citation in self.references[docID]['keys']:
+                                    del self.references[docID]['keys'][citation]
                     del self.archive[docID]['page'][cell]['citations']
             else:
                 if 'citations' in self.archive[docID]['page'][cell]:
@@ -151,16 +153,23 @@ class WillNotebook(object):
                     for citation in cellCitations:
                         if not citation in citations:
                             print('Removing citation from counters')
-                            self.references[docID]['counts'][citation] -= self.archive[docID]['page'][cell]['citations'][citation]
-                            if self.references[docID]['counts'][citation] == 0:
-                                changedCitations = True
-                                del self.archive[docID]['page'][cell]['citations'][citation]
-                                del self.references[docID]['counts'][citation]
-                                del self.references[docID]['keys'][citation]
+                            n = self.archive[docID]['page'][cell]['citations'][citation]
+                            citationList = getInside('\cite{','}',citation).split(',')
+                            for individual in citationList:
+                                self.references[docID]['counts'][individual] -= n
+                                if self.references[docID]['counts'][individual] == 0:
+                                    changedCitations = True
+                                    del self.references[docID]['counts'][individual]
+                                    if citation in self.archive[docID]['page'][cell]['citations']:
+                                        del self.archive[docID]['page'][cell]['citations'][citation]
+                                    if citation in self.references[docID]['keys']:
+                                        del self.references[docID]['keys'][citation]
                         else:
                             print('Updating citation counters')
                             oldN = self.archive[docID]['page'][cell]['citations'][citation]
-                            self.references[docID]['counts'][citation] -= oldN
+                            citationList = getInside('\cite{','}',citation).split(',')
+                            for individual in citationList:
+                                self.references[docID]['counts'][individual] -= oldN
         refUpdate = ''
         if changedCitations:
             if self.references[docID]['refCell']:
@@ -353,12 +362,18 @@ class WillNotebook(object):
                     self.archive[docID]['page'][cell]['citations'] = {}
                 self.references[docID]['keys'][citation] = ''
                 self.archive[docID]['page'][cell]['citations'][citation] = content.count(citation)
-                self.references[docID]['counts'][citation] = content.count(citation)
+                citationList = getInside('\cite{','}',citation).split(',')
+                for individual in citationList:
+                    self.references[docID]['counts'][individual] = content.count(citation)
                 changed = True
                 print('NEW REF ADDED')
             else:
                 print('Adding')
-                self.references[docID]['counts'][citation] += content.count(citation)
+                citationList = getInside('\cite{','}',citation).split(',')
+                for individual in citationList:
+                    if not individual in self.references[docID]['counts']:
+                        self.references[docID]['counts'][individual] = 0
+                    self.references[docID]['counts'][individual] += content.count(citation)
         refUpdate = ''
         if changed:
             self.makeReferences(docID)
