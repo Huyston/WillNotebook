@@ -29,3 +29,37 @@ h5 {
     font-weight: bold;
     text-decoration: none;
 }
+
+figcaption {
+    text-indent: 0px;
+}
+
+.tableCaption {
+    padding: 10px 0px;
+    text-indent: 0px;
+    text-align:center;
+}
+table {
+    border-collapse:collapse;
+    text-indent: 0;
+}
+
+th {
+    padding: 0px 10px;
+    border-bottom: 1px solid black;
+    border-right: 1px solid black;
+}
+
+th:last-child {
+    border-right: 0;
+}
+
+td {
+    padding: 0px 10px;
+    border-right: 1px solid black;
+    text-align: center;
+}
+
+td:last-child {
+    border-right: 0;
+}

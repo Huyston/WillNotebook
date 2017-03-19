@@ -206,6 +206,8 @@ class WillNotebook(object):
                 output = self.handleTitle(content)
             elif startWith('!ref',content):
                 output = self.handleReferences(docID,cell=cell)
+            elif startWith('!tab',content):
+                output = self.handleTables(content)
             else:
                 output = content
         if emptyLine(output):
@@ -497,6 +499,32 @@ class WillNotebook(object):
             output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/Images/'+filename+'"><br>Source: '+source+'</center><br>'
         self.archive[docID]['page'][cell]['output'] = output
         return output
+
+    def handleTables(self,content):
+        table = '<center><table>'
+        caption = ''
+        label = ''
+        for row in content.split('\n'):
+            if '!tab' in row:
+                label = row.replace('!tab ','')
+            elif not '|' in row:
+                if row:
+                    caption = '<div class="tableCaption" id="'+label+'">'+row+'</div>'
+            elif '||' in row:
+                headings = row.split('||')
+                table += '<tr>\n'
+                for heading in headings:
+                    table += '<th>'+heading+'</th>'
+                table += '</tr>'
+            elif '|' in row:
+                cols = row.split('|')
+                table += '<tr>\n'
+                for col in cols:
+                    table += '<td>'+col+'</td>'
+                table += '</tr>'
+            table += '\n'
+        table += '</center>\n'
+        return caption+table
 
     @cherrypy.expose
     def saveFile(self,docID,filename,extension):

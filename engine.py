@@ -169,6 +169,7 @@ def handleShiftDelete(id):
         page.remove(id)
     updateSectionNumbers()
     updateFigureNumbers()
+    updateTableNumbers()
     handleReferences()
     window.math.reNumber()
     print('Cell deleted')
@@ -415,6 +416,7 @@ def receive(req):
                     document['o'+refCell].innerHTML =  ref
             document['o'+outIndex].innerHTML =  req.text
             updateSectionNumbers()
+            updateTableNumbers()
             handleReferences()
             window.math.reNumber()
             #window.MathJax.Hub.Queue(["Typeset",window.MathJax.Hub])
@@ -430,6 +432,7 @@ def receiveImg(req):
         print('Receiving...',outIndex)
         document['o'+outIndex].innerHTML = req
         updateFigureNumbers()
+        updateTableNumbers()
         handleReferences()
         print('o'+outIndex)
     except Exception as e:
@@ -479,6 +482,7 @@ def ack(req):
                 document['o'+refCell].innerHTML =  ref
         updateSectionNumbers()
         updateFigureNumbers()
+        updateTableNumbers()
         handleReferences() # this order is important. If it comes after mathjax, the \ref command gets evalluated by it first
         window.math.reNumber()
     except:
@@ -509,6 +513,7 @@ def renderFile(req):
         newCell()
         updateSectionNumbers()
         updateFigureNumbers()
+        updateTableNumbers()
         handleReferences() # this order is important. If it comes after mathjax, the \ref command gets evalluated by it first
         window.math.reNumber()
         #window.MathJax.Hub.Queue(["Typeset",window.MathJax.Hub])
@@ -636,6 +641,34 @@ def updateFigureNumbers():
                     tag = '<figcaption>'
                 document['o'+id].html = replaceNumber(html,tag,'<b>Fig. '+str(N)+':</b> ')
 
+def updateTableNumbers():
+    global references
+    def replaceNumber(content,tag,numbering):
+        print('Content: ',content)
+        if '<span>' in content:
+            caption = content[content.index('</span>'):]
+            print('If: ',caption)
+            return '<br><center>'+tag+'<span>'+numbering+caption
+        else:
+            caption = content[content.index(tag)+len(tag):]
+            print('Else: ','<center>'+tag+'<span>'+numbering+'</span>'+caption)
+            return '<br><center>'+tag+'<span>'+numbering+'</span>'+caption
+
+    N = 0
+    for id in page:
+        html = document['o'+id].html
+        if html:
+            if 'class="tableCaption"' in html:
+                N+=1
+                if 'id="' in html:
+                    label = getInside('id="','"',html)
+                    references['\\tab{'+label+'}'] = '<a href="#'+label+'">'+str(N)+'</a>'
+                    tag = '<div class="tableCaption" id="'+label+'">'
+                    print('tem id')
+                else:
+                    tag = '<div class="tableCaption">'
+                document['o'+id].html = replaceNumber(html,tag,'<b>Table '+str(N)+':</b> ')
+
 references = {}
 def handleReferences():
     global references
@@ -649,6 +682,8 @@ def handleReferences():
                 command = '\\sec{'
             elif '\\fig{' in ref:
                 command = '\\fig{'
+            elif '\\tab{' in ref:
+                command = '\\tab{'
             else:
                 print('something went wrong with ref')
                 continue
@@ -683,6 +718,8 @@ def handleReferences():
             print('replaced eq')
         if '\\sec{' in html:
             interpreteRef('\\sec{',html)
+        if '\\tab{' in html:
+            interpreteRef('\\tab{',html)
             
             
 
