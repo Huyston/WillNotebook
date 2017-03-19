@@ -31,6 +31,7 @@ class DocxExporter():
         self.document = Document()
         self.docType = docType
         self.figNumber = 1
+        self.tabNumber = 1
 
     def formatText(self,text,p):
         '''handle bold, italic, etc '''
@@ -157,7 +158,11 @@ class DocxExporter():
             if rowCols > cols:
                 cols = rowCols
 
+        cap = self.document.add_paragraph('Table '+str(self.tabNumber)+': '+caption,'Caption')
+        cap.alignment = 1
+        para = self.document.add_paragraph()
         docxTable = self.document.add_table(rows=1,cols=cols)
+        docxTable.alignment = 1
         for row in table.split('\n'):
             if '||' in row:
                 headings = row.split('||')
@@ -169,6 +174,8 @@ class DocxExporter():
                 hCells = docxTable.add_row().cells
                 for n,text in enumerate(colText):
                     hCells[n].text = text
+        self.tabNumber += 1
+        self.document.add_paragraph() #pula linha
 
     def close(self):
         self.document.save(os.getcwd()+'/Archieves/'+self.filename+'.docx')
