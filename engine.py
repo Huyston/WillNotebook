@@ -270,7 +270,7 @@ def handleInAlt5(id):
     if not '!##### ' in document[id].value:
         document[id].value = '!##### ' + document[id].value
 
-def handleInAltC(id):
+def handleInAltT(id):
     if not '!tab ' in document[id].value:
         document[id].value = '!tab <label>\n' + document[id].value
 
