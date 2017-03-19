@@ -165,7 +165,7 @@ class DocxExporter():
                 for n,heading in enumerate(headings):
                     hCells[n].text = heading
             elif '|' in row:
-                colText = row.split('||')
+                colText = row.split('|')
                 hCells = docxTable.add_row().cells
                 for n,text in enumerate(colText):
                     hCells[n].text = text
