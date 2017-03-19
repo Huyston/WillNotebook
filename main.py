@@ -598,6 +598,19 @@ class WillNotebook(object):
                     exporter.addFigure(img,caption,source=source,label=label,width=width)
                 else:
                     raise NotImplemented
+            elif '!tab' in content:
+                caption = ''
+                label = ''
+                table = ''
+                for row in content.split('\n'):
+                    if '!tab' in row:
+                        label = row.replace('!tab ','')
+                    elif not '|' in row:
+                        if row:
+                            caption = row
+                    else:
+                        table += row+'\n'
+                exporter.addTable(table,caption,label)
             else:
                 if show:
                     exporter.addText(cell['output'])

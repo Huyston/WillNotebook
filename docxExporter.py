@@ -146,6 +146,30 @@ class DocxExporter():
         self.figNumber += 1
         self.document.add_paragraph() #pula linha
 
+    def addTable(self,table,caption,label):
+        cols = 0
+        for row in table.split('\n'):
+            rowCols = 0
+            if '||' in row:
+                rowCols = len(row.split('||'))
+            elif '|' in row:
+                rowCols = len(row.split('|'))
+            if rowCols > cols:
+                cols = rowCols
+
+        docxTable = self.document.add_table(rows=1,cols=cols)
+        for row in table.split('\n'):
+            if '||' in row:
+                headings = row.split('||')
+                hCells = docxTable.add_row().cells
+                for n,heading in enumerate(headings):
+                    hCells[n].text = heading
+            elif '|' in row:
+                colText = row.split('||')
+                hCells = docxTable.add_row().cells
+                for n,text in enumerate(colText):
+                    hCells[n].text = text
+
     def close(self):
         self.document.save(os.getcwd()+'/Archieves/'+self.filename+'.docx')
 
