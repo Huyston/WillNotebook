@@ -97,7 +97,7 @@ class WillNotebook(object):
             if content['type'] == 'image':
                 filename = content['img']
                 os.remove(os.getcwd()+'/Archieves/Images/'+filename)
-        if startWith('!ref',content):
+        elif startWith('!ref',content):
             print('Deleting the refCell')
             self.references[docID]['refCell'] = ''
         changedRefs = False
