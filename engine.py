@@ -72,6 +72,9 @@ def shortcuts(ev):
     elif ev.altKey and ev.which == 73:
         handleInAltI(id)
         ev.returnValue = False
+    elif ev.altKey and ev.which == 84:
+        handleInAltT(id)
+        ev.returnValue = False
 
 def outShortcuts(ev):
     global lastFocused
@@ -116,6 +119,9 @@ def outShortcuts(ev):
             ev.returnValue = False
         elif ev.altKey and ev.which == 73:
             handleOutAltI(id)
+            ev.returnValue = False
+        elif ev.altKey and ev.which == 84:
+            handleOutAltT(id)
             ev.returnValue = False
     except Exception as e:
         print(e)
@@ -264,6 +270,10 @@ def handleInAlt5(id):
     if not '!##### ' in document[id].value:
         document[id].value = '!##### ' + document[id].value
 
+def handleInAltC(id):
+    if not '!tab ' in document[id].value:
+        document[id].value = '!tab <label>\n' + document[id].value
+
 def slider(ev):
     previewId = ev.target.id.replace('SL','P')
     print(document[previewId].style.width)
@@ -309,6 +319,10 @@ def handleOutAlt4(id):
 def handleOutAlt5(id):
     handleAltN(id)
     handleInAlt5(nextId(id))
+
+def handleOutAltT(id):
+    handleAltN(id)
+    handleInAltT(nextId(id))
 
 def handleOutAltI(id):
     global page,cellCounter
