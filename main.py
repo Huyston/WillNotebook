@@ -523,7 +523,7 @@ class WillNotebook(object):
                     table += '<td>'+col+'</td>'
                 table += '</tr>'
             table += '\n'
-        table += '</center>\n'
+        table += '</table></center>\n'
         return caption+table
 
     @cherrypy.expose

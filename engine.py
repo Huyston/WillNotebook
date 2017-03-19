@@ -508,6 +508,7 @@ def renderFile(req):
     document <= DIV(id="page")
     page = []
     print('Done deleting')
+    print('Received: ',req)
     try:
         document['page'].innerHTML +=  req
         cellCounter = 0
