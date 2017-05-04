@@ -225,7 +225,7 @@ class WillNotebook(object):
             self.archive[docID]['page'][cell]['output'] = storeOutput
         else:
             self.archive[docID]['page'][cell]['output'] = output
-        print('References now: ',self.references[docID]['References'])
+        #print('References now: ',self.references[docID]['References'].encode('utf8'))
         ## Update refcell content ##
         if self.references[docID]['refCell']:
             for n in range(len(self.archive[docID]['page'])):
