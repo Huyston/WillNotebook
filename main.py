@@ -389,7 +389,7 @@ class WillNotebook(object):
                 refUpdate = '!@StartRef@!cell="'+str(self.references[docID]['refCell'])+'"'+self.handleReferences(docID)+'!@EndRef@!'
         for citation in toCitate:
             content = content.replace(citation,self.references[docID]['keys'][citation])    
-        print('Content in citation is: ',content)
+        #print('Content in citation is: ',content.encode('utf8'))
         return refUpdate+content
 
     def handleReferences(self,docID,cell=None):
