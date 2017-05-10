@@ -287,7 +287,7 @@ class WillNotebook(object):
     def handleBold(self,content):
         toBold = getAllInside('**','**', content)
         for expr in toBold:
-            print('Bold :',expr)
+            #print('Bold :',expr)
             bold = '<b>'+toBold[expr]+'</b>'
             content = content.replace(expr,bold)
         return content
@@ -295,18 +295,18 @@ class WillNotebook(object):
     def handleBoldItalics(self,content):
         toBoldItalicize = getAllInside('***','***', content)
         for expr in toBoldItalicize:
-            print('BoldItalics :',expr)
+            #print('BoldItalics :',expr)
             boldItalic = '<i><b>'+toBoldItalicize[expr]+'</b></i>'
             content = content.replace(expr,boldItalic)
         return content
 
     def makeReferences(self,docID):
         def getRef(line):
-            print('Getting from: ',line)
+            #print('Getting from: ',line)
             keyword = 'indent" >'
             i = line.index(keyword)
             reference = line[i+len(keyword):]
-            print('The ref is: ',reference)
+            #print('The ref is: ',reference)
             while ' ' in reference[0]:
                 reference = reference[1:]
             return reference.replace('\n','')
