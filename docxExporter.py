@@ -147,7 +147,7 @@ class DocxExporter():
         self.figNumber += 1
         self.document.add_paragraph() #pula linha
 
-    def addTable(self,table,caption,label):
+    def addTable(self,table,caption,label='',source=''):
         cols = 0
         for row in table.split('\n'):
             rowCols = 0
@@ -174,6 +174,8 @@ class DocxExporter():
                 hCells = docxTable.add_row().cells
                 for n,text in enumerate(colText):
                     hCells[n].text = text
+        sou = self.document.add_paragraph('Source: '+source,'Caption')
+        sou.alignment = 1
         self.tabNumber += 1
         self.document.add_paragraph() #pula linha
 

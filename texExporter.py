@@ -25,7 +25,7 @@ def getInside(first,last,content):
 
 class TexExporter():
     def __init__(self,filename,docType):
-        self.document = open(os.getcwd()+'/Archieves/'+filename+'.tex','w')
+        self.document = open(os.getcwd()+'/Archieves/'+filename+'.tex','w', encoding='utf8')
         self.docType = docType
         self.writePreamble()
 
@@ -46,7 +46,7 @@ class TexExporter():
 
     def formatText(self,text):
         '''handle bold, italic, etc '''
-        content = text.replace('\\sec{','\\ref{').replace('\\fig{','\\ref{').replace('\\eq{','\\ref{')
+        content = text.replace('\\sec{','\\ref{').replace('\\fig{','\\ref{').replace('\\eq{','\\ref{').replace('\\tab{','\\ref{')
         if '<b>' in text:
             toBold = getAllInside('<b>','</b>',text)
             for bold in toBold:
@@ -71,7 +71,7 @@ class TexExporter():
 
     def addText(self,text):
         formatedText = self.formatText(text)
-        self.document.write(formatedText+'\n')
+        self.document.write(formatedText+'\n\n')
 
     def addHeading(self,title,level,label):
         section = {1:'\chapter{',2:'\section{',3:'\subsection{',4:'\subsubsection{',5:'\paragraph{'}
@@ -95,8 +95,47 @@ Source: '''+source+'''
 \end{figure}'''
         self.document.write(figure+'\n\n')
 
+    def addTable(self,table,caption,label='',source=''):
+        cols = 0
+        for row in table.split('\n'):
+            rowCols = 0
+            if '||' in row:
+                rowCols = len(row.split('||'))
+            elif '|' in row:
+                rowCols = len(row.split('|'))
+            if rowCols > cols:
+                cols = rowCols
+
+        tableCode = '''\\begin{table}
+\label{'''+label+'''}
+\caption{'''+caption+'''}
+\centering
+\\begin{tabular}{'''+' c |'*(cols-1)+''' c }
+'''
+
+        for row in table.split('\n'):
+            if '||' in row:
+                headings = row.split('||')
+                for heading in headings:
+                    tableCode += heading + ' & '
+                tableCode = tableCode[:-3]
+                tableCode += '\\\\\n'
+            elif '|' in row:
+                colText = row.split('|')
+                for text in colText:
+                    tableCode += text + ' & '
+                tableCode = tableCode[:-3]
+                tableCode += '\\\\\n'
+        tableCode += '''\hline
+\end{tabular}'''
+        if source:
+            tableCode += '''\\bigskip
+Source: '''+source+'''
+'''
+        tableCode += '\end{table}'
+        self.document.write(tableCode+'\n\n')
+
     def close(self):
         self.document.write('\\end{document}')
         self.document.close()
         print('Ta aqu')
-

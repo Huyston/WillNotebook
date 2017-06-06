@@ -594,7 +594,7 @@ class WillNotebook(object):
                     caption = content['caption']
                     source = content['source']
                     label = content['label']
-                    width = str(int(content['width'].replace('px',''))/800.0)
+                    width = str(float(content['width'].replace('px','')))
                     exporter.addFigure(img,caption,source=source,label=label,width=width)
                 else:
                     raise NotImplemented
@@ -602,15 +602,18 @@ class WillNotebook(object):
                 caption = ''
                 label = ''
                 table = ''
+                source = ''
                 for row in content.split('\n'):
                     if '!tab' in row:
                         label = row.replace('!tab ','')
                     elif not '|' in row:
+                        if '!source ' in row:
+                            source = row.replace('!source ')
                         if row:
                             caption = row
                     else:
                         table += row+'\n'
-                exporter.addTable(table,caption,label)
+                exporter.addTable(table,caption,label,source)
             else:
                 if show:
                     exporter.addText(cell['output'])
