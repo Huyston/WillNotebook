@@ -338,12 +338,23 @@ class WillNotebook(object):
         html = open(os.getcwd()+'/Archieves/cit.html','r',errors='replace',encoding='latin1')
         n = 0
         beginReference = False
+        buffedLine = ''
+        buffering = False
         for line in html:
             ### Get citation ###
             if n < len(refs):
-                if 'class="noindent"' in line or 'class="indent"' in line:
-                    self.references[docID]['keys'][refs[n]] = getRef(line)
-                    n+=1
+                print(buffering)
+                if 'class="noindent"' in line or 'class="indent"' in line or buffering:
+                    print('entrou')
+                    buffedLine += line # This is because if some references are too long and there is a new line, citation gets cut.
+                    print(buffedLine)
+                    if ')' in line:
+                        self.references[docID]['keys'][refs[n]] = getRef(buffedLine)
+                        buffedLine = ''
+                        buffering = False
+                        n+=1
+                    else:
+                        buffering = True
             ### Get reference ###
             else:
                 ### Order of the if's is important
