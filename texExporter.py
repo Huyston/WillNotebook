@@ -89,8 +89,8 @@ class TexExporter():
         figure = '''\\begin{figure}[!h]
 \centering
 \includegraphics[width='''+width+'''\\textwidth]{Images/'''+img+'''}
-\label{'''+label+'''}
 \caption{'''+caption+'''}
+\label{'''+label+'''}
 Source: '''+source+'''
 \end{figure}'''
         self.document.write(figure+'\n\n')
@@ -107,8 +107,8 @@ Source: '''+source+'''
                 cols = rowCols
 
         tableCode = '''\\begin{table}
-\label{'''+label+'''}
 \caption{'''+caption+'''}
+\label{'''+label+'''}
 \centering
 \\begin{tabular}{'''+' c |'*(cols-1)+''' c }
 '''
