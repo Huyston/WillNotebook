@@ -660,7 +660,10 @@ class WillNotebook(object):
             print('Error opening file. File does not exist!')
             return '<center id="c1"><textarea id="1" action="evalCell" style="width: 800px; display: none;">'+content+'</textarea></center><center id="co1"><div id="o1" class="paragraph">'+output+'</div></center>'
         self.archive[docID] = pickle.load(archive)
-        self.references[docID] = self.archive[docID]['references']
+        if 'references' in self.archive[docID]:
+            self.references[docID] = self.archive[docID]['references']
+        else:
+            self.references[docID] = {'keys':{},'counts':{},'References':'','refCell':''}
         if 'serverRefCell' in self.references[docID]:
             self.references[docID]['refCell'] = self.references[docID]['serverRefCell']
         else:
