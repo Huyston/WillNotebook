@@ -625,6 +625,9 @@ class WillNotebook(object):
                     else:
                         table += row+'\n'
                 exporter.addTable(table,caption,label,source)
+            elif '!title' in content:
+                title = content.replace('!title ','')
+                exporter.addTitle(title)
             else:
                 if show:
                     exporter.addText(cell['output'])

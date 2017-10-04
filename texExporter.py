@@ -135,6 +135,10 @@ Source: '''+source+'''
         tableCode += '\end{table}'
         self.document.write(tableCode+'\n\n')
 
+    def addTitle(self,title):
+        titleCode = '\\title{'+title+'}\n\\maketitle\n\n'
+        self.document.write(titleCode)
+
     def close(self):
         self.document.write('\\end{document}')
         self.document.close()
