@@ -2,7 +2,7 @@
 
 [![Join the chat at https://gitter.im/WillNotebook/Lobby](https://badges.gitter.im/WillNotebook/Lobby.svg)](https://gitter.im/WillNotebook/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=C58FUYGZW7QDA&lc=US&item_name=WillNotebook&item_number=willnotebook&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=E7Y37MQH9EFX2)
 
 WillNotebook is inspired by jupyter (notebook) project, but aims the specifics of academic writing. The idea is to merge the advantages and functionalities of Word, Latex and Python together into one powerful and hackable software.
 
