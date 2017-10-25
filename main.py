@@ -538,15 +538,15 @@ class WillNotebook(object):
         return caption+table
 
     @cherrypy.expose
-    def saveFile(self,docID,filename,extension):
+    def saveFile(self,docID,filename,extension,model):
         if extension == 'will':
             self.saveAsWill(docID,filename)
         elif extension == 'tex':
-            self.saveAs(docID,filename,extension)
+            self.saveAs(docID,filename,extension,model)
         elif extension == 'docx':
-            self.saveAs(docID,filename,extension)
+            self.saveAs(docID,filename,extension,model)
         elif extension == 'pdflatex':
-            self.saveAs(docID,filename,extension)
+            self.saveAs(docID,filename,extension,model)
             extension = 'pdf'
         return serve_file(os.getcwd()+'/Archieves/'+filename+'.'+extension,"application/x-download","attachment")
 
@@ -561,9 +561,11 @@ class WillNotebook(object):
             pickle.dump(self.archive[docID],archive)
         archive.close()
 
-    def saveAs(self,docID,filename,docFormat,article=True):
-        if article:
+    def saveAs(self,docID,filename,docFormat,model):
+        if model == 'article':
             texClass = 'article'
+        elif model == 'usp':
+            texClass = 'abntepusp'
         else:
             texClass = 'report'
         if docFormat == 'tex':
@@ -628,6 +630,32 @@ class WillNotebook(object):
             elif '!title' in content:
                 title = content.replace('!title ','')
                 exporter.addTitle(title)
+            elif '!author' in content:
+                author = content.replace('!author ','')
+                exporter.addAuthor(author)
+            elif '!advisor' in content:
+                advisor = content.replace('!advisor ','')
+                exporter.addAdvisor(advisor)
+            elif '!concentration' in content:
+                area = content.replace('!concentration ','')
+                exporter.addConcentrationArea(area)
+            elif '!modeltype' in content:
+                params = content.replace('!modeltype ','').split(' ')
+                model = params[0]
+                del params[0]
+                area = ' '.join(params)
+                exporter.addModelType(model,area)
+            elif '!local' in content:
+                local = content.replace('!local ','')
+                exporter.addLocal(local)
+            elif '!department' in content:
+                department = content.replace('!department ','')
+                exporter.addLocal(department)
+            elif '!date' in content:
+                date = content.replace('!date ','')
+                exporter.addDate(date)
+            elif '!makecover' in content.lower():
+                exporter.makeCover()
             else:
                 if show:
                     exporter.addText(cell['output'])

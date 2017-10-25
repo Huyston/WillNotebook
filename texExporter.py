@@ -27,15 +27,29 @@ class TexExporter():
     def __init__(self,filename,docType):
         self.document = open(os.getcwd()+'/Archieves/'+filename+'.tex','w', encoding='utf8')
         self.docType = docType
+        if docType == 'abntepusp':
+            from shutil import copyfile
+            copyfile(os.getcwd()+'/Modelos/abntepusp.cls',os.getcwd()+'/Archieves/abntepusp.cls')
+            self.options = 'a4paper,capchap,espacoduplo,normaltoc'
+            self.addPackages = ['\\usepackage[alf,abnt-etal-list=0,abnt-repeated-author-omit=no]{abntex2cite}',]
+        else:
+            self.options = ''
+            self.addPackages = []
         self.writePreamble()
 
     def writePreamble(self):
-        self.document.write('''\\documentclass{'''+self.docType+'''}
+        self.document.write('''\\documentclass['''+self.options+''']{'''+self.docType+'''}
 \\usepackage[T1]{fontenc} %font encoding setup
 \\usepackage[utf8]{inputenc} %input encoding setup
 \\usepackage{graphicx} %for displaying figures
 \\usepackage{mathtools} %for displaying math
 \\usepackage{listings} %for displaying code
+''')
+
+        for package in self.addPackages:
+            self.document.write(package+'\n')
+
+        self.document.write('''
 
 \\setcounter{secnumdepth}{5} %for displaying numbers up to 5 levels
 \\setcounter{tocdepth}{5} %for displaying numbers up to 5 levels in TOC
@@ -136,8 +150,46 @@ Source: '''+source+'''
         self.document.write(tableCode+'\n\n')
 
     def addTitle(self,title):
-        titleCode = '\\title{'+title+'}\n\\maketitle\n\n'
+        if self.docType == 'abntepusp':
+            titleCode = '\\titulo{'+title+'}\n'
+        else:
+            titleCode = '\\title{'+title+'}\n\\maketitle\n\n'
         self.document.write(titleCode)
+
+    def addAuthor(self,author):
+        if self.docType == 'abntepusp':
+            names = author.split(' ')
+            firstNames = ' '.join(names[:-1])
+            lastName = names[-1]
+            self.document.write('\\autorPoli{'+firstNames+'}{}{}{}{'+lastName+'}\n')
+
+    def addAdvisor(self,advisor):
+        if self.docType == 'abntepusp':
+            self.document.write('\\orientador{'+advisor+'}\n')
+
+    def addConcentrationArea(self,area):
+        if self.docType == 'abntepusp':
+            self.document.write('\\areaConcentracao{'+area+'}\n')
+
+    def addDepartment(self,department):
+        if self.docType == 'abntepusp':
+            self.document.write('\\departamento{'+department+'}\n')
+
+    def addModelType(self,modelType,area):
+        if self.docType == 'abntepusp':
+            self.document.write('\\'+modelType+'{'+area+'}\n')
+
+    def addLocal(self,local):
+        if self.docType == 'abntepusp':
+            self.document.write('\\local{'+local+'}\n')
+
+    def addDate(self,date):
+        if self.docType == 'abntepusp':
+            self.document.write('\\data{'+date+'}\n')
+
+    def makeCover(self):
+        if self.docType == 'abntepusp':
+            self.document.write('\\capa{}\n\\folhaderosto{}\n\n')
 
     def close(self):
         self.document.write('\\end{document}')

@@ -179,6 +179,27 @@ class DocxExporter():
         self.tabNumber += 1
         self.document.add_paragraph() #pula linha
 
+    def addTitle(self,title):
+        pass
+
+    def addAuthor(self,author):
+        pass
+
+    def addAdvisor(self,advisor):
+        pass
+
+    def addConcentrationArea(self,area):
+        pass
+
+    def addLocal(self,local):
+        pass
+
+    def addDate(self,date):
+        pass
+
+    def makeCover(self):
+        pass
+
     def close(self):
         self.document.save(os.getcwd()+'/Archieves/'+self.filename+'.docx')
 
