@@ -447,7 +447,7 @@ class WillNotebook(object):
 
     def handleTitle(self,content):
         title = content.replace('!title ','')
-        return '<center><b><font size="7">'+title+'</font></b></center><br><br>'
+        return '<div class="title">'+title+'</div>'
     
     @cherrypy.expose
     def image(self,docID,cell,img,label,source,caption,width):

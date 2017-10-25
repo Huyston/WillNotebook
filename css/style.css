@@ -5,6 +5,13 @@
     text-indent: 50px;
     margin-bottom: 10px;
 }
+.title {
+    text-indent: 0px;
+    font-size: 45px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    text-align: center;
+}
 h1 {
     text-indent: 0;  
 }
@@ -63,3 +70,4 @@ td {
 td:last-child {
     border-right: 0;
 }
+
