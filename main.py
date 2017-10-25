@@ -650,7 +650,7 @@ class WillNotebook(object):
                 exporter.addLocal(local)
             elif '!department' in content:
                 department = content.replace('!department ','')
-                exporter.addLocal(department)
+                exporter.addDepartment(department)
             elif '!date' in content:
                 date = content.replace('!date ','')
                 exporter.addDate(date)

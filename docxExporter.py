@@ -1,5 +1,7 @@
 from docx import Document
-from docx.shared import Inches
+from docx.shared import Inches,Mm
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 import os
 
 def getAllInside(first,last,content):
@@ -28,8 +30,12 @@ def getInside(first,last,content):
 class DocxExporter():
     def __init__(self,filename,docType):
         self.filename = filename
-        self.document = Document()
+        if docType == 'abntepusp':
+            self.document = Document(docx=os.getcwd()+'/Modelos/abntepusp.docx')
+        else:
+            self.document = Document()
         self.docType = docType
+        self.docProperties = {}
         self.figNumber = 1
         self.tabNumber = 1
 
@@ -180,25 +186,121 @@ class DocxExporter():
         self.document.add_paragraph() #pula linha
 
     def addTitle(self,title):
-        pass
+        if self.docType == 'abntepusp':
+            self.docProperties['title'] = title
 
     def addAuthor(self,author):
-        pass
+        if self.docType == 'abntepusp':
+            self.docProperties['author'] = author
 
     def addAdvisor(self,advisor):
-        pass
+        if self.docType == 'abntepusp':
+            self.docProperties['advisor'] = advisor
 
     def addConcentrationArea(self,area):
-        pass
+        if self.docType == 'abntepusp':
+            self.docProperties['concentration'] = area
+
+    def addDepartment(self,department):
+        if self.docType == 'abntepusp':
+            self.docProperties['department'] = department
+
+    def addModelType(self,modelType,area):
+        if self.docType == 'abntepusp':
+            self.docProperties['modelType'] = modelType
+            self.docProperties['area'] = area
 
     def addLocal(self,local):
-        pass
+        if self.docType == 'abntepusp':
+            self.docProperties['local'] = local
 
     def addDate(self,date):
-        pass
+        if self.docType == 'abntepusp':
+            self.docProperties['date'] = date
 
     def makeCover(self):
-        pass
+        def set_row_height(row, height):
+            height = float(height)
+            height = height*10000.0/176.4
+            tr = row._tr
+            trPr = tr.find(qn('w:trPr'))
+            if trPr==None:
+                x=OxmlElement('w:trPr')
+                tr.append(x);
+                trPr = tr.find(qn('w:trPr'));
+            trHeight = OxmlElement('w:trHeight')
+            trHeight.set(qn('w:val'), str(height))
+            trPr.append(trHeight)
+
+        def cover(coverType,titleText,author,advisor,concentration,department,modelType,area,local,dateText):
+            #template
+            tab = self.document.add_table(cols=2, rows=4, style='SimpleTable2')
+            set_row_height(tab.rows[0],90)
+            set_row_height(tab.rows[1],30)
+            set_row_height(tab.rows[2],108)
+            set_row_height(tab.rows[3],10)
+            authorName = tab.cell(0,0).merge(tab.cell(0,1))
+            authorName.width = Mm(210-50)
+            authorName.text = author
+            authorName.paragraphs[0].style = 'Normal'
+            authorName.paragraphs[0].bold = True
+            authorName.paragraphs[0].alignment = 1
+            authorName.paragraphs[0].first_line_indent = None
+            title = tab.cell(1,0).merge(tab.cell(1,1))
+            title.width = Mm(210-50)
+            title.text = titleText
+            title.paragraphs[0].style = 'Body Text' # Precisa ser o Body text 3 ... 
+            title.paragraphs[0].alignment = 1
+            apresBlank = tab.cell(2,0)
+            apresBlank.width = Mm((210-50)/2.0)
+            apres = tab.cell(2,1)
+            apres.width = Mm((210-50)/2.0)
+            apres.text = 'Documento bla'
+            apres.paragraphs[0].style = 'Normal'
+            apres.paragraphs[0].bold = True
+            apres.paragraphs[0].alignment = 3
+            apres.paragraphs[0].first_line_indent = None
+            date = tab.cell(3,0).merge(tab.cell(3,1))
+            date.width = Mm(210-50)
+            date.text = local+'\n'+dateText
+            date.paragraphs[0].style = 'Normal'
+            date.paragraphs[0].bold = True
+            date.paragraphs[0].alignment = 1
+
+        if self.docType == 'abntepusp':
+            cover('capa',
+                  self.docProperties['title'],
+                  self.docProperties['author'],
+                  self.docProperties['advisor'],
+                  self.docProperties['concentration'],
+                  self.docProperties['department'],
+                  self.docProperties['modelType'],
+                  self.docProperties['area'],
+                  self.docProperties['local'],
+                  self.docProperties['date'],
+                  )
+            cover('falsafolhaderosto',
+                  self.docProperties['title'],
+                  self.docProperties['author'],
+                  self.docProperties['advisor'],
+                  self.docProperties['concentration'],
+                  self.docProperties['department'],
+                  self.docProperties['modelType'],
+                  self.docProperties['area'],
+                  self.docProperties['local'],
+                  self.docProperties['date'],
+                  )
+            cover('folhaderosto',
+                  self.docProperties['title'],
+                  self.docProperties['author'],
+                  self.docProperties['advisor'],
+                  self.docProperties['concentration'],
+                  self.docProperties['department'],
+                  self.docProperties['modelType'],
+                  self.docProperties['area'],
+                  self.docProperties['local'],
+                  self.docProperties['date'],
+                  )
 
     def close(self):
         self.document.save(os.getcwd()+'/Archieves/'+self.filename+'.docx')
