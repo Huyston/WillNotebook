@@ -208,6 +208,8 @@ class WillNotebook(object):
                 output = self.handleReferences(docID,cell=cell)
             elif startWith('!tab',content):
                 output = self.handleTables(content)
+            elif startWith('!-',content):
+                output = self.handleBullets(content)
             else:
                 output = content
         if emptyLine(output):
@@ -536,6 +538,9 @@ class WillNotebook(object):
             table += '\n'
         table += '</table></center>\n'
         return caption+table
+
+    def handleBullets(self,content):
+        return '<li>'+content.replace('!- ','').replace('!-','')+'</li>'
 
     @cherrypy.expose
     def saveFile(self,docID,filename,extension,model):

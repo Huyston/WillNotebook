@@ -71,3 +71,6 @@ td:last-child {
     border-right: 0;
 }
 
+li {
+    text-indent:70px;    
+}
