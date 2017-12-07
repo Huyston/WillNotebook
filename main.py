@@ -100,6 +100,7 @@ class WillNotebook(object):
         elif startWith('!ref',content):
             print('Deleting the refCell')
             self.references[docID]['refCell'] = ''
+            self.references[docID]['serverRefCell'] = ''
         changedRefs = False
         if '\cite{' in content:
             print('Counts: ',self.references[docID]['counts'])
