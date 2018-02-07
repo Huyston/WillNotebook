@@ -24,12 +24,13 @@ def getInside(first,last,content):
     return value
 
 class TexExporter():
-    def __init__(self,filename,docType):
-        self.document = open(os.getcwd()+'/Archieves/'+filename+'.tex','w', encoding='utf8')
+    def __init__(self,filename,docID,docType):
+        self.docID = docID
+        self.document = open(os.getcwd()+'/Archieves/'+docID+'/'+filename+'.tex','w', encoding='utf8')
         self.docType = docType
         if docType == 'abntepusp':
             from shutil import copyfile
-            copyfile(os.getcwd()+'/Modelos/abntepusp.cls',os.getcwd()+'/Archieves/abntepusp.cls')
+            copyfile(os.getcwd()+'/Modelos/abntepusp.cls',os.getcwd()+'/Archieves/'+docID+'/abntepusp.cls')
             self.options = 'a4paper,capchap,espacoduplo,normaltoc'
             self.addPackages = ['\\usepackage[alf,abnt-etal-list=0,abnt-repeated-author-omit=no]{abntex2cite}',]
         else:
