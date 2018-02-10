@@ -74,3 +74,15 @@ td:last-child {
 li {
     text-indent:70px;    
 }
+
+.bibKeys {
+    color:#003300
+}
+
+.error {
+    color:#AA0000
+}
+
+.msg {
+    color:#AA76AA
+}
