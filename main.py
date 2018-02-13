@@ -479,7 +479,7 @@ class WillNotebook(object):
             return begin+matchingKeys+end
         else:
             return begin+'No matching result'+end
-
+    
     def getBibKeys(self,docID,bibText=None,getInfo=False):
         if not docID in os.listdir(os.getcwd()+'/Archieves'):
             os.mkdir(os.getcwd()+'/Archieves/'+docID)
@@ -540,15 +540,11 @@ class WillNotebook(object):
             return msg('Deleted '+bibKey+' bib entry')
         else:
             return error('Woops! This key is not in the database.')
-    
+
     @cherrypy.expose
     def image(self,docID,cell,img,label,source,caption,width):
         def loadImg(filename):
-            try:
-                os.mkdir(os.getcwd()+'/Archieves/'+docID+'/Images')
-            except FileExistsError:
-                pass
-            i = open(os.getcwd()+'/Archieves/'+docID+'/Images/'+filename,'wb')
+            i = open(os.getcwd()+'/Archieves/Images/'+filename,'wb')
             while True:
                 data = img.file.read(4096)
                 if not data:
@@ -601,9 +597,9 @@ class WillNotebook(object):
                     
                 self.archive[docID]['page'][cell] = {'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':'.'}
         if label:
-            output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/'+docID+'/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+            output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/Images/'+filename+'"><br>Source: '+source+'</center><br>'
         else:
-            output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/'+docID+'/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+            output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/Images/'+filename+'"><br>Source: '+source+'</center><br>'
         self.archive[docID]['page'][cell]['output'] = output
         return output
 
@@ -647,15 +643,10 @@ class WillNotebook(object):
         elif extension == 'pdflatex':
             self.saveAs(docID,filename,extension,model)
             extension = 'pdf'
-        return serve_file(os.getcwd()+'/Archieves/'+docID+'/'+filename+'.'+extension,"application/x-download","attachment")
+        return serve_file(os.getcwd()+'/Archieves/'+filename+'.'+extension,"application/x-download","attachment")
 
     def saveAsWill(self,docID,filename):
-        import tarfile
-        try:
-            os.mkdir(os.getcwd()+'/Archieves/'+docID)
-        except FileExistsError:
-            pass
-        archive = open(os.getcwd()+'/Archieves/'+docID+'/'+filename+'.wnb','wb')
+        archive = open(os.getcwd()+'/Archieves/'+filename+'.will','wb')
         self.archive[docID]['references'] = self.references[docID]
         try:
             pickle.dump(self.archive[docID],archive)
@@ -664,17 +655,6 @@ class WillNotebook(object):
             self.archive[docID]['Locals'] = {}
             pickle.dump(self.archive[docID],archive)
         archive.close()
-        try:
-            os.mkdir(os.getcwd()+'/Archieves/'+docID+'/Images')
-        except FileExistsError:
-            pass
-        if not 'database.bib' in os.listdir(os.getcwd()+'/Archieves/'+docID):
-            db = open(os.getcwd()+'/Archieves/'+docID+'/database.bib','w')
-            db.close()
-        with tarfile.open(os.getcwd()+'/Archieves/'+docID+'/'+filename+'.will','w:xz') as will:
-            will.add(os.getcwd()+'/Archieves/'+docID+'/'+filename+'.wnb',arcname=filename+'.wnb')
-            will.add(os.getcwd()+'/Archieves/'+docID+'/database.bib',arcname='database.bib')
-            will.add(os.getcwd()+'/Archieves/'+docID+'/Images',arcname='Images')
 
     def saveAs(self,docID,filename,docFormat,model):
         if model == 'article':
@@ -685,13 +665,13 @@ class WillNotebook(object):
             texClass = 'report'
         if docFormat == 'tex':
             from texExporter import TexExporter
-            exporter = TexExporter(filename,docID,texClass)
+            exporter = TexExporter(filename,texClass)
         elif docFormat == 'pdflatex':
             from pdfLatexExporter import PdfLatexExporter
-            exporter = PdfLatexExporter(filename,docID,texClass)
+            exporter = PdfLatexExporter(filename,texClass)
         elif docFormat == 'docx':
             from docxExporter import DocxExporter
-            exporter = DocxExporter(filename,docID,texClass)
+            exporter = DocxExporter(filename,texClass)
 
         for cell in self.archive[docID]['page']:
             content = cell['content']
@@ -781,44 +761,25 @@ class WillNotebook(object):
 
     @cherrypy.expose
     def open(self,docID,toOpen):
-        import tarfile
         filename = toOpen.filename
-        try:
-            print('Trying to create a filder for the document')
-            os.mkdir(os.getcwd()+'/Archieves/'+docID)
-            print('Done')
-        except FileExistsError:
-            print('Document was open before. Overwriting')
-            import shutil
-            shutil.rmtree(os.getcwd()+'/Archieves/'+docID)
-            os.mkdir(os.getcwd()+'/'+docID)
-            print('Done rewriting')
-        if '.will' in filename:
-            d = open(os.getcwd()+'/Archieves/'+docID+'/'+filename,'wb')
-            while True:
-                data = toOpen.file.read(4096)
-                if not data:
-                    break
-                else:
-                    d.write(data)
-                print('Loading...')
-            d.close()
-            with tarfile.open(os.getcwd()+'/Archieves/'+docID+'/'+filename,mode='r:xz') as will:
-                will.extractall(path=os.getcwd()+'/Archieves/'+docID+'/')
-            req = self.openFile(docID,filename)
-            return req
-        else:
-            return 'Filetype not suported for opening'
+        d = open(os.getcwd()+'/Archieves/'+filename,'wb')
+        while True:
+            data = toOpen.file.read(4096)
+            if not data:
+                break
+            else:
+                d.write(data)
+            print('Loading...')
+        d.close()
+        req = self.openFile(docID,filename)
+        return req
 
     @cherrypy.expose
     def openFile(self,docID,filename):
         self.archive[docID] = {}
         print('Openning file ',filename)
-        for f in os.listdir(os.getcwd()+'/Archieves/'+docID):
-            if '.wnb' in f:
-                filename = f
         try:
-            archive = open(os.getcwd()+'/Archieves/'+docID+'/'+filename,'rb')
+            archive = open(os.getcwd()+'/Archieves/'+filename,'rb')
         except:
             content = 'Error loading file. File not found.'
             output = content
@@ -848,7 +809,7 @@ class WillNotebook(object):
                     caption = stuff['content']['caption']
                     width = stuff['content']['width']
 
-                    notebook += '<center id="c'+str(cell)+'"><form id="F'+str(cell)+'" enctype="multipart/form-data" method="POST" action="image" style="display: none;"><input type="file" name="img" value="Archieves/'+docID+'/Images/'+img+'" id="'+str(cell)+'" style="display: none;"><br>Label:<input name="label" value="'+label+'" id="L'+str(cell)+'"><br>Caption:<input name="caption" value="'+caption+'" id="C'+str(cell)+'"><br>Source:<input name="source" value="'+source+'" id="S'+str(cell)+'"><br>Width:<input id="SL'+str(cell)+'"name="width" type="range" min="0" max="1" step="0.01" value="'+width.replace('px','')+'"><br><img id="P'+str(cell)+'" src="Archieves/'+docID+'/Images/'+img+'" style="width:'+width+'"></form></center>'
+                    notebook += '<center id="c'+str(cell)+'"><form id="F'+str(cell)+'" enctype="multipart/form-data" method="POST" action="image" style="display: none;"><input type="file" name="img" value="Archieves/Images/'+img+'" id="'+str(cell)+'" style="display: none;"><br>Label:<input name="label" value="'+label+'" id="L'+str(cell)+'"><br>Caption:<input name="caption" value="'+caption+'" id="C'+str(cell)+'"><br>Source:<input name="source" value="'+source+'" id="S'+str(cell)+'"><br>Width:<input id="SL'+str(cell)+'"name="width" type="range" min="0" max="1" step="0.01" value="'+width.replace('px','')+'"><br><img id="P'+str(cell)+'" src="Archieves/Images/'+img+'" style="width:'+width+'"></form></center>'
                     output = stuff['output']
                     notebook += '<center tabindex="0" id="co'+str(cell)+'"><div id="o'+str(cell)+'" class="paragraph">'+output+'</div></center>'
             else:
