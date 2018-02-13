@@ -17,6 +17,12 @@ def section(text):
     '''This is a test notebook python function'''
     print("<h1>"+text+"</h1>")
 
+def msg(msg):
+    return '<font class="msg dontprint">'+msg+'</font>'
+
+def error(msg):
+    return '<font class="error dontprint">'+msg+'</font>'
+
 def genRandomStr(length):
     chars = 'qwertyuiopasdfghjklzxcvbnm1234567890QWERTYUIOPASDFGHJKLZXCVBNM'
     randomStr = ''.join(random.choice(chars) for i in range(length))
@@ -96,7 +102,7 @@ class WillNotebook(object):
         if 'type' in content:
             if content['type'] == 'image':
                 filename = content['img']
-                os.remove(os.getcwd()+'/Archieves/Images/'+filename)
+                os.remove(os.getcwd()+'/Archieves/'+docID+'/Images/'+filename)
         elif startWith('!ref',content):
             print('Deleting the refCell')
             self.references[docID]['refCell'] = ''
@@ -211,6 +217,12 @@ class WillNotebook(object):
                 output = self.handleTables(content)
             elif startWith('!-',content):
                 output = self.handleBullets(content)
+            elif startWith('!keyfor',content):
+                output = self.handleBibKeySearch(docID,content)
+            elif startWith('!addref',content):
+                output = self.handleInsertBibEntry(docID,content)
+            elif startWith('!delref',content):
+                output = self.handleDeleteBibEntry(docID,content)
             else:
                 output = content
         if emptyLine(output):
@@ -317,7 +329,7 @@ class WillNotebook(object):
         '''Updates the references'''
         self.references[docID]['References'] = ''
         ### Make the tex file and compile it ###
-        citations = open(os.getcwd()+'/Archieves/cit.tex','w')
+        citations = open(os.getcwd()+'/Archieves/'+docID+'/cit.tex','w')
         citations.write('''\\documentclass{article}
 \\usepackage[T1]{fontenc}
 \\usepackage[utf8]{inputenc}
@@ -333,12 +345,12 @@ class WillNotebook(object):
         citations.write('''\\bibliography{database}
 \end{document}''')
         citations.close()
-        call(['htlatex','cit.tex'],cwd=os.getcwd()+'/Archieves/')
-        call(['bibtex','cit.aux'],cwd=os.getcwd()+'/Archieves/')
-        call(['htlatex','cit.tex'],cwd=os.getcwd()+'/Archieves/')
+        call(['htlatex','cit.tex'],cwd=os.getcwd()+'/Archieves/'+docID)
+        call(['bibtex','cit.aux'],cwd=os.getcwd()+'/Archieves/'+docID)
+        call(['htlatex','cit.tex'],cwd=os.getcwd()+'/Archieves/'+docID)
         ### END: Make the tex file and compile it ###
         ### Parse the compiled HTML file ###
-        html = open(os.getcwd()+'/Archieves/cit.html','r',errors='replace',encoding='latin1')
+        html = open(os.getcwd()+'/Archieves/'+docID+'/cit.html','r',errors='replace',encoding='latin1')
         n = 0
         beginReference = False
         buffedLine = ''
@@ -451,6 +463,83 @@ class WillNotebook(object):
     def handleTitle(self,content):
         title = content.replace('!title ','')
         return '<div class="title">'+title+'</div>'
+
+    def handleBibKeySearch(self,docID,content):
+        terms = content.replace('!keyfor ','').strip()
+        begin = '<font class="bibKeys dontprint">'
+        matchingKeys = ''
+        bibData = self.getBibKeys(docID,getInfo=True)
+        for key in bibData:
+            for term in terms:
+                if term in bibData[key]:
+                    matchingKeys += key+'\n'
+                    break
+        end = '</font>'
+        if matchingKeys:
+            return begin+matchingKeys+end
+        else:
+            return begin+'No matching result'+end
+
+    def getBibKeys(self,docID,bibText=None,getInfo=False):
+        if not docID in os.listdir(os.getcwd()+'/Archieves'):
+            os.mkdir(os.getcwd()+'/Archieves/'+docID)
+        if not 'database.bib' in os.listdir(os.getcwd()+'/Archieves/'+docID):
+            with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','w') as bib:
+                pass
+        if bibText:
+            bibData = bibText
+        else:
+            with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','r') as bib:
+                bibData = bib.read()
+        comma = 0
+        if getInfo:
+            keys = {}
+        else:
+            keys = []
+        while True:
+            try:
+                cursor = bibData.index('@',comma)
+                openBrace = bibData.index('{',cursor)
+                comma = bibData.index(',',openBrace)
+                key = bibData[openBrace+1:comma]
+                try:
+                    nextEntry = bibData.index('@',comma)
+                except ValueError:
+                    nextEntry = -1
+                if getInfo:
+                    keys[key] = bibData[cursor:nextEntry]
+                else:
+                    keys.append(key)
+            except ValueError:
+                break
+        return keys
+
+    def handleInsertBibEntry(self,docID,bibText):
+        bibText = bibText.replace('!addref ','').strip()
+        key = self.getBibKeys(docID,bibText=bibText)
+        if key:
+            key = key[0]
+            if key in self.getBibKeys(docID):
+                return error('Holy! Entry already exists in the database.')
+            else:
+                with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','a') as bib:
+                    bib.write(bibText+'\n\n')
+                return msg('Inserted bib entry')
+        else:
+            return error('Woops! This is not a valid bibtex entry.')
+
+    def handleDeleteBibEntry(self,docID,bibKey):
+        bibKey = bibKey.replace('!delref ','').strip()
+        if bibKey in self.getBibKeys(docID):
+            entry = self.getBibKeys(docID,getInfo=True)[bibKey].strip()+'\n\n'
+            with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','r') as bib:
+                bibData = bib.read()
+            bibData = bibData.replace(entry,'')
+            with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','w') as bib:
+                bib.write(bibData)
+            return msg('Deleted '+bibKey+' bib entry')
+        else:
+            return error('Woops! This key is not in the database.')
     
     @cherrypy.expose
     def image(self,docID,cell,img,label,source,caption,width):
