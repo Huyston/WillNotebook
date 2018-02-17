@@ -738,7 +738,7 @@ class WillNotebook(object):
                     caption = content['caption']
                     source = content['source']
                     label = content['label']
-                    width = str(float(content['width'].replace('px','')))
+                    width = str(float(content['width'].replace('px',''))/800)
                     exporter.addFigure(img,caption,source=source,label=label,width=width)
                 else:
                     raise NotImplemented
