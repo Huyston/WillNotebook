@@ -555,7 +555,7 @@ class WillNotebook(object):
 
     def handleTODO(self,content):
         content = content.replace('!todo ','')
-        return '<font class="todo">TODO: '+content+'</font>'
+        return '<font class="todo dontprint">TODO: '+content+'</font>'
 
     @cherrypy.expose
     def image(self,docID,cell,img,label,source,caption,width):
@@ -693,6 +693,17 @@ class WillNotebook(object):
             will.add(os.getcwd()+'/Archieves/'+docID+'/Images',arcname='Images')
 
     def saveAs(self,docID,filename,docFormat,model):
+        try:
+            os.mkdir(os.getcwd()+'/Archieves/'+docID)
+        except FileExistsError:
+            pass
+        try:
+            os.mkdir(os.getcwd()+'/Archieves/'+docID+'/Images')
+        except FileExistsError:
+            pass
+        if not 'database.bib' in os.listdir(os.getcwd()+'/Archieves/'+docID):
+            db = open(os.getcwd()+'/Archieves/'+docID+'/database.bib','w')
+            db.close()
         if model == 'article':
             texClass = 'article'
         elif model == 'usp':
