@@ -86,3 +86,8 @@ li {
 .msg {
     color:#AA76AA;
 }
+
+.todo {
+    color:red;
+    font-weight:bold;
+}

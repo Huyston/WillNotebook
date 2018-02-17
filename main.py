@@ -223,6 +223,10 @@ class WillNotebook(object):
                 output = self.handleInsertBibEntry(docID,content)
             elif startWith('!delref',content):
                 output = self.handleDeleteBibEntry(docID,content)
+            elif startWith('!infofor',content):
+                output = self.handleInfoForBibEntry(docID,content)
+            elif startWith('!todo',content):
+                output = self.handleTODO(content)
             else:
                 output = content
         if emptyLine(output):
@@ -541,6 +545,18 @@ class WillNotebook(object):
         else:
             return error('Woops! This key is not in the database.')
     
+    def handleInfoForBibEntry(self,docID,bibKey):
+        bibKey = bibKey.replace('!infofor ','').strip()
+        if bibKey in self.getBibKeys(docID):
+            entry = self.getBibKeys(docID,getInfo=True)[bibKey].strip()+'\n\n'
+            return msg(entry)
+        else:
+            return error('Woops! This key is not in the database.')
+
+    def handleTODO(self,content):
+        content = content.replace('!todo ','')
+        return '<font class="todo">TODO: '+content+'</font>'
+
     @cherrypy.expose
     def image(self,docID,cell,img,label,source,caption,width):
         def loadImg(filename):
