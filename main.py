@@ -740,7 +740,7 @@ class WillNotebook(object):
                             exporter.addText(remaining)
                         else:
                             break
-            elif 'class="dontprint"' in cell['output']:
+            elif 'dontprint' in cell['output']:
                 show = False
             ### special cells ###
             elif 'type' in content and not type(content) == str:
