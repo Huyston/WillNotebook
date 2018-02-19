@@ -305,7 +305,8 @@ class DocxExporter():
                   )
 
     def addBullet(self,topic):
-        self.document.add_paragraph(topic,style='List Bullet') 
+        p = self.document.add_paragraph(style='List Bullet') 
+        self.formatText(topic,p)
 
     def close(self):
         self.document.save(os.getcwd()+'/Archieves/'+self.docID+'/'+self.filename+'.docx')

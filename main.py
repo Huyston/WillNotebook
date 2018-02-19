@@ -768,7 +768,7 @@ class WillNotebook(object):
                         label = row.replace('!tab ','')
                     elif not '|' in row:
                         if '!source ' in row:
-                            source = row.replace('!source ')
+                            source = row.replace('!source ','')
                         if row:
                             caption = row
                     else:
@@ -804,7 +804,7 @@ class WillNotebook(object):
             elif '!makecover' in content.lower():
                 exporter.makeCover()
             elif '!- ' in content.lower():
-                topic = content.replace('!- ','').strip()
+                topic = cell['output'].replace('<li>','').replace('</li>','').strip()
                 exporter.addBullet(topic)
             else:
                 if show:

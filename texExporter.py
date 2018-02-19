@@ -26,6 +26,7 @@ def getInside(first,last,content):
 class TexExporter():
     def __init__(self,filename,docID,docType):
         self.docID = docID
+        self.filename = filename
         self.document = open(os.getcwd()+'/Archieves/'+docID+'/'+filename+'.tex','w', encoding='utf8')
         self.docType = docType
         if docType == 'abntepusp':
@@ -36,6 +37,7 @@ class TexExporter():
         else:
             self.options = ''
             self.addPackages = []
+        self.inBullet = False
         self.writePreamble()
 
     def writePreamble(self):
@@ -192,6 +194,24 @@ Source: '''+source+'''
     def makeCover(self):
         if self.docType == 'abntepusp':
             self.document.write('\\capa{}\n\\folhaderosto{}\n\n')
+
+    def addBullet(self,topic):
+        topic = self.formatText(topic)
+        self.document.close()
+        self.document = open(os.getcwd()+'/Archieves/'+self.docID+'/'+self.filename+'.tex','r', encoding='utf8')
+        backUp = self.document.readlines()
+        self.document.close()
+        self.document = open(os.getcwd()+'/Archieves/'+self.docID+'/'+self.filename+'.tex','w', encoding='utf8')
+        if '\\end{itemize}' in backUp[-2]:
+            del backUp[-1]
+            backUp[-1] = '\\item '+topic+'\n'
+            self.document.write(''.join(backUp))
+            self.document.write('\\end{itemize}\n\n')
+        else:
+            self.document.write(''.join(backUp))
+            self.document.write('\\begin{itemize}\n')
+            self.document.write('\\item '+topic+'\n')
+            self.document.write('\\end{itemize}\n\n')
 
     def close(self):
         self.document.write('\\end{document}')
