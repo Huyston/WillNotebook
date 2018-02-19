@@ -803,6 +803,9 @@ class WillNotebook(object):
                 exporter.addDate(date)
             elif '!makecover' in content.lower():
                 exporter.makeCover()
+            elif '!- ' in content.lower():
+                topic = content.replace('!- ','').strip()
+                exporter.addBullet(topic)
             else:
                 if show:
                     exporter.addText(cell['output'])

@@ -39,6 +39,7 @@ class DocxExporter():
         self.docProperties = {}
         self.figNumber = 1
         self.tabNumber = 1
+        self.inBullet = False
 
     def formatText(self,text,p):
         '''handle bold, italic, etc '''
@@ -303,7 +304,10 @@ class DocxExporter():
                   self.docProperties['date'],
                   )
 
+    def addBullet(self,topic):
+        self.document.add_paragraph(topic,style='List Bullet') 
+
     def close(self):
-        self.document.save(os.getcwd()+'/Archieves/'self.docID+'/'+self.filename+'.docx')
+        self.document.save(os.getcwd()+'/Archieves/'+self.docID+'/'+self.filename+'.docx')
 
 
