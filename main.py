@@ -561,6 +561,10 @@ class WillNotebook(object):
     def image(self,docID,cell,img,label,source,caption,width):
         def loadImg(filename):
             try:
+                os.mkdir(os.getcwd()+'/Archieves/'+docID)
+            except FileExistsError:
+                pass
+            try:
                 os.mkdir(os.getcwd()+'/Archieves/'+docID+'/Images')
             except FileExistsError:
                 pass
@@ -608,7 +612,7 @@ class WillNotebook(object):
                     self.archive[docID]['page'][cell]['content']['label'] = label
                     self.archive[docID]['page'][cell]['content']['source'] = source
                     self.archive[docID]['page'][cell]['content']['caption'] = caption
-                    self.archive[docID]['page'][cell]['content']['width'] = width
+                    self.archive[docID]['page'][cell]['content']['width'] = imgWidth
             else:
                 if filename:
                     loadImg(filename)
@@ -750,6 +754,7 @@ class WillNotebook(object):
                     source = content['source']
                     label = content['label']
                     width = str(float(content['width'].replace('px',''))/800)
+                    print('On main.py image width is ',width)
                     exporter.addFigure(img,caption,source=source,label=label,width=width)
                 else:
                     raise NotImplemented
