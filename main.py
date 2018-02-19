@@ -621,11 +621,11 @@ class WillNotebook(object):
                     
                 self.archive[docID]['page'][cell] = {'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':'.'}
         if label:
-            output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/'+docID+'/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+            output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>Source: '+source+'</center><br>'
         else:
-            output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/'+docID+'/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+            output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>Source: '+source+'</center><br>'
         self.archive[docID]['page'][cell]['output'] = output
-        return output
+        return output.replace('@$docID$@',docID)
 
     def handleTables(self,content):
         table = '<center><table>'
@@ -881,11 +881,11 @@ class WillNotebook(object):
                     width = stuff['content']['width']
 
                     notebook += '<center id="c'+str(cell)+'"><form id="F'+str(cell)+'" enctype="multipart/form-data" method="POST" action="image" style="display: none;"><input type="file" name="img" value="Archieves/'+docID+'/Images/'+img+'" id="'+str(cell)+'" style="display: none;"><br>Label:<input name="label" value="'+label+'" id="L'+str(cell)+'"><br>Caption:<input name="caption" value="'+caption+'" id="C'+str(cell)+'"><br>Source:<input name="source" value="'+source+'" id="S'+str(cell)+'"><br>Width:<input id="SL'+str(cell)+'"name="width" type="range" min="0" max="1" step="0.01" value="'+width.replace('px','')+'"><br><img id="P'+str(cell)+'" src="Archieves/'+docID+'/Images/'+img+'" style="width:'+width+'"></form></center>'
-                    output = stuff['output']
+                    output = stuff['output'].replace('@$docID$@',docID)
                     notebook += '<center tabindex="0" id="co'+str(cell)+'"><div id="o'+str(cell)+'" class="paragraph">'+output+'</div></center>'
             else:
                 content = stuff['content']
-                output = stuff['output']
+                output = stuff['output'].replace('@$docID$@',docID)
                 notebook += '<center id="c'+str(cell)+'"><textarea id="'+str(cell)+'" action="evalCell" style="width: 800px; display: none;">'+content+'</textarea></center>'
                 notebook += '<center tabindex="0" id="co'+str(cell)+'"><div id="o'+str(cell)+'" class="paragraph">'+output+'</div></center>'
         return notebook
