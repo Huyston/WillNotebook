@@ -99,7 +99,7 @@ class WillNotebook(object):
         print('Delete cell called')
         print('Index: ',index)
         content = self.archive[docID]['page'][index]['content']
-        if 'type' in content:
+        if type(content) is dict:
             if content['type'] == 'image':
                 filename = content['img']
                 os.remove(os.getcwd()+'/Archieves/'+docID+'/Images/'+filename)
