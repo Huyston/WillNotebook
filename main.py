@@ -366,7 +366,7 @@ class WillNotebook(object):
                 if 'class="noindent"' in line or 'class="indent"' in line or buffering:
                     print('entrou')
                     buffedLine += line # This is because if some references are too long and there is a new line, citation gets cut.
-                    print(buffedLine)
+                    #print(buffedLine)
                     if ')' in line:
                         self.references[docID]['keys'][refs[n]] = getRef(buffedLine)
                         buffedLine = ''
@@ -488,12 +488,12 @@ class WillNotebook(object):
         if not docID in os.listdir(os.getcwd()+'/Archieves'):
             os.mkdir(os.getcwd()+'/Archieves/'+docID)
         if not 'database.bib' in os.listdir(os.getcwd()+'/Archieves/'+docID):
-            with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','w') as bib:
+            with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','w',encoding='utf8') as bib:
                 pass
         if bibText:
             bibData = bibText
         else:
-            with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','r') as bib:
+            with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','r',encoding='utf8') as bib:
                 bibData = bib.read()
         comma = 0
         if getInfo:
@@ -526,7 +526,7 @@ class WillNotebook(object):
             if key in self.getBibKeys(docID):
                 return error('Holy! Entry already exists in the database.')
             else:
-                with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','a') as bib:
+                with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','a',encoding='utf8') as bib:
                     bib.write(bibText+'\n\n')
                 return msg('Inserted bib entry')
         else:
@@ -536,10 +536,10 @@ class WillNotebook(object):
         bibKey = bibKey.replace('!delref ','').strip()
         if bibKey in self.getBibKeys(docID):
             entry = self.getBibKeys(docID,getInfo=True)[bibKey].strip()+'\n\n'
-            with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','r') as bib:
+            with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','r',encoding='utf8') as bib:
                 bibData = bib.read()
             bibData = bibData.replace(entry,'')
-            with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','w') as bib:
+            with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','w',encoding='utf8') as bib:
                 bib.write(bibData)
             return msg('Deleted '+bibKey+' bib entry')
         else:
