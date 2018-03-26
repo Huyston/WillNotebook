@@ -103,7 +103,7 @@ class WillNotebook(object):
             if content['type'] == 'image':
                 filename = content['img']
                 os.remove(os.getcwd()+'/Archieves/'+docID+'/Images/'+filename)
-                #TODO remove citation also
+                content = content['caption']+content['source']
         elif startWith('!ref',content):
             print('Deleting the refCell')
             self.references[docID]['refCell'] = ''
@@ -126,6 +126,7 @@ class WillNotebook(object):
                         print('Citation removed')
         else:
             print('No citation in this cell')
+        self.updateRefCell(docID)
         refUpdate = ''
         if changedRefs:
             self.makeReferences(docID)
@@ -136,7 +137,7 @@ class WillNotebook(object):
         return refUpdate+'Cell deleted'
 
     @cherrypy.expose
-    def evalCell(self,docID,cell,content):
+    def evalCell(self,docID,cell,outIndex,content):
         cell = int(cell)
         print(cell)
         if cell == len(self.archive[docID]['page']):
@@ -150,7 +151,7 @@ class WillNotebook(object):
         elif startWith('!title',content):
             output = self.handleTitle(content)
         elif content == '!ref':
-            output = self.handleReferences(docID,cell=cell)
+            output = self.handleReferences(docID,cell=outIndex)
         elif startWith('!tab',content):
             output = self.handleTables(content)
         elif startWith('!-',content):
@@ -432,6 +433,7 @@ class WillNotebook(object):
 
     def handleReferences(self,docID,cell=None):
         if cell:
+            print('RefCell is ',cell)
             self.references[docID]['refCell'] = cell
         output = '<h1>References</h1>\n'
         output += self.references[docID]['References']
@@ -640,7 +642,7 @@ class WillNotebook(object):
         else:
             output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>Source: '+source+'</center><br>'
         self.archive[docID]['page'][cell]['output'] = output
-        return output.replace('@$docID$@',docID)
+        return refUpdate+output.replace('@$docID$@',docID)
 
     def handleTables(self,content):
         table = '<center><table>'
