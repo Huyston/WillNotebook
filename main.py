@@ -103,6 +103,7 @@ class WillNotebook(object):
             if content['type'] == 'image':
                 filename = content['img']
                 os.remove(os.getcwd()+'/Archieves/'+docID+'/Images/'+filename)
+                #TODO remove citation also
         elif startWith('!ref',content):
             print('Deleting the refCell')
             self.references[docID]['refCell'] = ''
@@ -123,6 +124,8 @@ class WillNotebook(object):
                             del self.references[docID]['keys'][citation]
                         changedRefs = True
                         print('Citation removed')
+        else:
+            print('No citation in this cell')
         refUpdate = ''
         if changedRefs:
             self.makeReferences(docID)
@@ -136,59 +139,110 @@ class WillNotebook(object):
     def evalCell(self,docID,cell,content):
         cell = int(cell)
         print(cell)
-        changedCitations = False
         if cell == len(self.archive[docID]['page']):
             self.archive[docID]['page'].append({'content':content,'output':'.'})
+        self.archive[docID]['page'][cell]['content'] = content
+        refUpdate,content = self.handleText(docID,cell,content)
+        if startWith('!#',content):
+            output = self.handleSections(content)
+        elif startWith('!eq',content):
+            output = self.handleEquations(content)
+        elif startWith('!title',content):
+            output = self.handleTitle(content)
+        elif content == '!ref':
+            output = self.handleReferences(docID,cell=cell)
+        elif startWith('!tab',content):
+            output = self.handleTables(content)
+        elif startWith('!-',content):
+            output = self.handleBullets(content)
+        elif startWith('!keyfor',content):
+            output = self.handleBibKeySearch(docID,content)
+        elif startWith('!addref',content):
+            output = self.handleInsertBibEntry(docID,content)
+        elif startWith('!delref',content):
+            output = self.handleDeleteBibEntry(docID,content)
+        elif startWith('!infofor',content):
+            output = self.handleInfoForBibEntry(docID,content)
+        elif startWith('!todo',content):
+            output = self.handleTODO(content)
         else:
-            ### Existing cell ###
-            ### Check if there was any citation and if it changed ###
-            citations = getAllInside('\cite{','}',content)
-            if not citations:
-                if 'citations' in self.archive[docID]['page'][cell]:
-                    changedCitations = True
-                    for citation in self.archive[docID]['page'][cell]['citations']:
+            output = content
+        if emptyLine(output):
+            output = self.emptyLineSymbol
+        if not '!@StartRef@!' in content[:12]:
+            print('Modified citations and there is no citations in content')
+            output = refUpdate+output
+        ## Store output without the ref updater tags ##
+        if '!@StartRef@!' in output:
+            print('output with ref: ',output)
+            refContent = getInside('!@StartRef@!','!@EndRef@!',output)
+            storeOutput = output.replace(refContent,'')
+            storeOutput = storeOutput.replace('!@StartRef@!','')
+            storeOutput = storeOutput.replace('!@EndRef@!','')
+            self.archive[docID]['page'][cell]['output'] = storeOutput
+        else:
+            self.archive[docID]['page'][cell]['output'] = output
+        self.updateRefCell(docID)
+        return output
+
+    def updateRefCell(self,docID):
+        if self.references[docID]['refCell']:
+            for n in range(len(self.archive[docID]['page'])):
+                if self.archive[docID]['page'][n]['content'] == '!ref':
+                    refCell = n
+            self.references[docID]['serverRefCell'] = refCell
+            self.archive[docID]['page'][refCell]['output'] = '<h1>References</h1>\n'+self.references[docID]['References']
+
+    def handleText(self,docID,cell,content):
+        ### Existing cell ###
+        ### Check if there was any citation and if it changed ###
+        changedCitations = False
+        citations = getAllInside('\cite{','}',content)
+        if not citations:
+            if 'citations' in self.archive[docID]['page'][cell]:
+                changedCitations = True
+                for citation in self.archive[docID]['page'][cell]['citations']:
+                    n = self.archive[docID]['page'][cell]['citations'][citation]
+                    citationList = getInside('\cite{','}',citation).split(',')
+                    for individual in citationList:
+                        self.references[docID]['counts'][individual] -= n
+                        print('Citation '+individual+' was removed from content')
+                        if self.references[docID]['counts'][individual] == 0:
+                            del self.references[docID]['counts'][individual]
+                            print('No more citation '+citation+' in document. Deleting...')
+                            if citation in self.references[docID]['keys']:
+                                del self.references[docID]['keys'][citation]
+                del self.archive[docID]['page'][cell]['citations']
+        else:
+            if 'citations' in self.archive[docID]['page'][cell]:
+                cellCitations = [i for i in self.archive[docID]['page'][cell]['citations'].keys()]
+                for citation in cellCitations:
+                    if not citation in citations:
+                        print('Removing citation from counters')
                         n = self.archive[docID]['page'][cell]['citations'][citation]
                         citationList = getInside('\cite{','}',citation).split(',')
                         for individual in citationList:
                             self.references[docID]['counts'][individual] -= n
-                            print('Citation '+individual+' was removed from content')
                             if self.references[docID]['counts'][individual] == 0:
+                                changedCitations = True
                                 del self.references[docID]['counts'][individual]
-                                print('No more citation '+citation+' in document. Deleting...')
+                                if citation in self.archive[docID]['page'][cell]['citations']:
+                                    del self.archive[docID]['page'][cell]['citations'][citation]
                                 if citation in self.references[docID]['keys']:
                                     del self.references[docID]['keys'][citation]
-                    del self.archive[docID]['page'][cell]['citations']
-            else:
-                if 'citations' in self.archive[docID]['page'][cell]:
-                    cellCitations = [i for i in self.archive[docID]['page'][cell]['citations'].keys()]
-                    for citation in cellCitations:
-                        if not citation in citations:
-                            print('Removing citation from counters')
-                            n = self.archive[docID]['page'][cell]['citations'][citation]
-                            citationList = getInside('\cite{','}',citation).split(',')
-                            for individual in citationList:
-                                self.references[docID]['counts'][individual] -= n
-                                if self.references[docID]['counts'][individual] == 0:
-                                    changedCitations = True
-                                    del self.references[docID]['counts'][individual]
-                                    if citation in self.archive[docID]['page'][cell]['citations']:
-                                        del self.archive[docID]['page'][cell]['citations'][citation]
-                                    if citation in self.references[docID]['keys']:
-                                        del self.references[docID]['keys'][citation]
-                        else:
-                            print('Updating citation counters')
-                            oldN = self.archive[docID]['page'][cell]['citations'][citation]
-                            citationList = getInside('\cite{','}',citation).split(',')
-                            for individual in citationList:
-                                self.references[docID]['counts'][individual] -= oldN
+                    else:
+                        print('Updating citation counters')
+                        oldN = self.archive[docID]['page'][cell]['citations'][citation]
+                        citationList = getInside('\cite{','}',citation).split(',')
+                        for individual in citationList:
+                            self.references[docID]['counts'][individual] -= oldN
         refUpdate = ''
         if changedCitations:
             if self.references[docID]['refCell']:
                 self.makeReferences(docID)
                 refUpdate = '!@StartRef@!cell="'+str(self.references[docID]['refCell'])+'"'+self.handleReferences(docID)+'!@EndRef@!'
-        self.archive[docID]['page'][cell]['content'] = content
         if startWith('#code',content):
-            output = self.handlePythonCode(docID,content)
+            content = self.handlePythonCode(docID,content)
             ## {{}} soh nao sera avaliado em #code
         else:
             if '{{' in content and '}}' in content:
@@ -205,54 +259,8 @@ class WillNotebook(object):
                 content = self.handleItalics(content)
             if '\cite{' in content and '}' in content:
                 content = self.handleCitations(docID,cell,content)
-            if startWith('!#',content):
-                output = self.handleSections(content)
-            elif startWith('!eq',content):
-                output = self.handleEquations(content)
-            elif startWith('!title',content):
-                output = self.handleTitle(content)
-            elif startWith('!ref',content):
-                output = self.handleReferences(docID,cell=cell)
-            elif startWith('!tab',content):
-                output = self.handleTables(content)
-            elif startWith('!-',content):
-                output = self.handleBullets(content)
-            elif startWith('!keyfor',content):
-                output = self.handleBibKeySearch(docID,content)
-            elif startWith('!addref',content):
-                output = self.handleInsertBibEntry(docID,content)
-            elif startWith('!delref',content):
-                output = self.handleDeleteBibEntry(docID,content)
-            elif startWith('!infofor',content):
-                output = self.handleInfoForBibEntry(docID,content)
-            elif startWith('!todo',content):
-                output = self.handleTODO(content)
-            else:
-                output = content
-        if emptyLine(output):
-            output = self.emptyLineSymbol
-        if not '!@StartRef@!' in content[:12]:
-            print('Modified citations and there is no citations in content')
-            output = refUpdate+output
-        ## Store output without the ref updater tags ##
-        if '!@StartRef@!' in output:
-            print('output with ref: ',output)
-            refContent = getInside('!@StartRef@!','!@EndRef@!',output)
-            storeOutput = output.replace(refContent,'')
-            storeOutput = storeOutput.replace('!@StartRef@!','')
-            storeOutput = storeOutput.replace('!@EndRef@!','')
-            self.archive[docID]['page'][cell]['output'] = storeOutput
-        else:
-            self.archive[docID]['page'][cell]['output'] = output
-        #print('References now: ',self.references[docID]['References'].encode('utf8'))
-        ## Update refcell content ##
-        if self.references[docID]['refCell']:
-            for n in range(len(self.archive[docID]['page'])):
-                if self.archive[docID]['page'][n]['content'] == '!ref':
-                    refCell = n
-            self.references[docID]['serverRefCell'] = refCell
-            self.archive[docID]['page'][refCell]['output'] = '<h1>References</h1>\n'+self.references[docID]['References']
-        return output
+        self.updateRefCell(docID)
+        return refUpdate, content
 
     def handlePythonCode(self,docID,content):
         with Capturing() as output:
@@ -569,14 +577,17 @@ class WillNotebook(object):
             except FileExistsError:
                 pass
             i = open(os.getcwd()+'/Archieves/'+docID+'/Images/'+filename,'wb')
-            while True:
-                data = img.file.read(4096)
-                if not data:
-                    break
-                else:
-                    i.write(data)
-                print('Loading...')
-            i.close()
+            try:
+                while True:
+                    data = img.file.read(4096)
+                    if not data:
+                        break
+                    else:
+                        i.write(data)
+                    print('Loading...')
+                i.close()
+            except AttributeError:
+                print('Using cached image')
         cell = int(cell)
         imgWidth = str(int(float(width)*800.0))+'px'
         if not type(img) == str:
@@ -593,7 +604,6 @@ class WillNotebook(object):
                     self.archive[docID]['page'].append({'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':output})
                 return output
             print('Its update. Using filename: ',filename)
-
         if cell == len(self.archive[docID]['page']):
             self.archive[docID]['page'].append({'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':'.'})
             loadImg(filename)
@@ -620,6 +630,11 @@ class WillNotebook(object):
                     return '<font class="dontprint" color="red">Warning, no image was inserted. Please try again.</font>'
                     
                 self.archive[docID]['page'][cell] = {'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':'.'}
+        _,handledCaption = self.handleText(docID,cell,caption) # handle caption, will mess refUpdate
+        _,handledSource = self.handleText(docID,cell,source) # handle source, will mess refUpdate
+        refUpdate,_ = self.handleText(docID,cell,caption+source) # handle refUpdate
+        caption = handledCaption # restoring caption
+        source = handledSource # restoring source
         if label:
             output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>Source: '+source+'</center><br>'
         else:
@@ -882,8 +897,9 @@ class WillNotebook(object):
                     source = stuff['content']['source']
                     caption = stuff['content']['caption']
                     width = stuff['content']['width']
+                    widthValue = str(float(width.replace('px',''))/800)
 
-                    notebook += '<center id="c'+str(cell)+'"><form id="F'+str(cell)+'" enctype="multipart/form-data" method="POST" action="image" style="display: none;"><input type="file" name="img" value="Archieves/'+docID+'/Images/'+img+'" id="'+str(cell)+'" style="display: none;"><br>Label:<input name="label" value="'+label+'" id="L'+str(cell)+'"><br>Caption:<input name="caption" value="'+caption+'" id="C'+str(cell)+'"><br>Source:<input name="source" value="'+source+'" id="S'+str(cell)+'"><br>Width:<input id="SL'+str(cell)+'"name="width" type="range" min="0" max="1" step="0.01" value="'+width.replace('px','')+'"><br><img id="P'+str(cell)+'" src="Archieves/'+docID+'/Images/'+img+'" style="width:'+width+'"></form></center>'
+                    notebook += '<center id="c'+str(cell)+'"><form id="F'+str(cell)+'" enctype="multipart/form-data" method="POST" action="image" style="display: none;"><input type="file" name="img" value="Archieves/'+docID+'/Images/'+img+'" id="'+str(cell)+'" style="display: none;"><br>Label:<input name="label" value="'+label+'" id="L'+str(cell)+'"><br>Caption:<input name="caption" value="'+caption+'" id="C'+str(cell)+'"><br>Source:<input name="source" value="'+source+'" id="S'+str(cell)+'"><br>Width:<input id="SL'+str(cell)+'"name="width" type="range" min="0" max="1" step="0.01" value="'+widthValue+'"><br><img id="P'+str(cell)+'" src="Archieves/'+docID+'/Images/'+img+'" style="width:'+width+'"></form></center>'
                     output = stuff['output'].replace('@$docID$@',docID)
                     notebook += '<center tabindex="0" id="co'+str(cell)+'"><div id="o'+str(cell)+'" class="paragraph">'+output+'</div></center>'
             else:
