@@ -28,7 +28,8 @@ def getInside(first,last,content):
     return value
 
 class DocxExporter():
-    def __init__(self,filename,docType):
+    def __init__(self,filename,docID,docType):
+        self.docID = docID
         self.filename = filename
         if docType == 'abntepusp':
             self.document = Document(docx=os.getcwd()+'/Modelos/abntepusp.docx')
@@ -38,6 +39,7 @@ class DocxExporter():
         self.docProperties = {}
         self.figNumber = 1
         self.tabNumber = 1
+        self.inBullet = False
 
     def formatText(self,text,p):
         '''handle bold, italic, etc '''
@@ -146,7 +148,7 @@ class DocxExporter():
         cap.alignment = 1
         para = self.document.add_paragraph()
         run = para.add_run()
-        run.add_picture(os.getcwd()+'/Archieves/Images/'+img,width=int(float(width)*Inches(5.75)))
+        run.add_picture(os.getcwd()+'/Archieves/'+self.docID+'/Images/'+img,width=int(float(width)*Inches(5.75)))
         para.alignment = 1
         sou = self.document.add_paragraph('Source: '+source,'Caption')
         sou.alignment = 1
@@ -302,7 +304,11 @@ class DocxExporter():
                   self.docProperties['date'],
                   )
 
+    def addBullet(self,topic):
+        p = self.document.add_paragraph(style='List Bullet') 
+        self.formatText(topic,p)
+
     def close(self):
-        self.document.save(os.getcwd()+'/Archieves/'+self.filename+'.docx')
+        self.document.save(os.getcwd()+'/Archieves/'+self.docID+'/'+self.filename+'.docx')
 
 

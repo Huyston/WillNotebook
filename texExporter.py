@@ -24,17 +24,20 @@ def getInside(first,last,content):
     return value
 
 class TexExporter():
-    def __init__(self,filename,docType):
-        self.document = open(os.getcwd()+'/Archieves/'+filename+'.tex','w', encoding='utf8')
+    def __init__(self,filename,docID,docType):
+        self.docID = docID
+        self.filename = filename
+        self.document = open(os.getcwd()+'/Archieves/'+docID+'/'+filename+'.tex','w', encoding='utf8')
         self.docType = docType
         if docType == 'abntepusp':
             from shutil import copyfile
-            copyfile(os.getcwd()+'/Modelos/abntepusp.cls',os.getcwd()+'/Archieves/abntepusp.cls')
+            copyfile(os.getcwd()+'/Modelos/abntepusp.cls',os.getcwd()+'/Archieves/'+docID+'/abntepusp.cls')
             self.options = 'a4paper,capchap,espacoduplo,normaltoc'
             self.addPackages = ['\\usepackage[alf,abnt-etal-list=0,abnt-repeated-author-omit=no]{abntex2cite}',]
         else:
             self.options = ''
             self.addPackages = []
+        self.inBullet = False
         self.writePreamble()
 
     def writePreamble(self):
@@ -44,6 +47,7 @@ class TexExporter():
 \\usepackage{graphicx} %for displaying figures
 \\usepackage{mathtools} %for displaying math
 \\usepackage{listings} %for displaying code
+\\usepackage{caption}
 ''')
 
         for package in self.addPackages:
@@ -88,7 +92,7 @@ class TexExporter():
         self.document.write(formatedText+'\n\n')
 
     def addHeading(self,title,level,label):
-        section = {1:'\chapter{',2:'\section{',3:'\subsection{',4:'\subsubsection{',5:'\paragraph{'}
+        section = {1:'\chapter{',2:'\section{',3:'\subsection{',4:'\subsubsection{',5:'\paragraph{',6:'\subparagraph'}
         formatedTitle = self.formatText(title)
         if self.docType == 'article':
             level += 1
@@ -102,10 +106,10 @@ class TexExporter():
     def addFigure(self,img,caption,source='',label='',width='0.5'):
         figure = '''\\begin{figure}[!h]
 \centering
-\includegraphics[width='''+width+'''\\textwidth]{Images/'''+img+'''}
 \caption{'''+caption+'''}
+\includegraphics[width='''+width+'''\\textwidth]{Images/'''+img+'''}
 \label{'''+label+'''}
-Source: '''+source+'''
+\caption*{Source: '''+source+'''}
 \end{figure}'''
         self.document.write(figure+'\n\n')
 
@@ -190,6 +194,24 @@ Source: '''+source+'''
     def makeCover(self):
         if self.docType == 'abntepusp':
             self.document.write('\\capa{}\n\\folhaderosto{}\n\n')
+
+    def addBullet(self,topic):
+        topic = self.formatText(topic)
+        self.document.close()
+        self.document = open(os.getcwd()+'/Archieves/'+self.docID+'/'+self.filename+'.tex','r', encoding='utf8')
+        backUp = self.document.readlines()
+        self.document.close()
+        self.document = open(os.getcwd()+'/Archieves/'+self.docID+'/'+self.filename+'.tex','w', encoding='utf8')
+        if '\\end{itemize}' in backUp[-2]:
+            del backUp[-1]
+            backUp[-1] = '\\item '+topic+'\n'
+            self.document.write(''.join(backUp))
+            self.document.write('\\end{itemize}\n\n')
+        else:
+            self.document.write(''.join(backUp))
+            self.document.write('\\begin{itemize}\n')
+            self.document.write('\\item '+topic+'\n')
+            self.document.write('\\end{itemize}\n\n')
 
     def close(self):
         self.document.write('\\end{document}')

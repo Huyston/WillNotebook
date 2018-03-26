@@ -17,6 +17,12 @@ def section(text):
     '''This is a test notebook python function'''
     print("<h1>"+text+"</h1>")
 
+def msg(msg):
+    return '<font class="msg dontprint">'+msg+'</font>'
+
+def error(msg):
+    return '<font class="error dontprint">'+msg+'</font>'
+
 def genRandomStr(length):
     chars = 'qwertyuiopasdfghjklzxcvbnm1234567890QWERTYUIOPASDFGHJKLZXCVBNM'
     randomStr = ''.join(random.choice(chars) for i in range(length))
@@ -93,10 +99,10 @@ class WillNotebook(object):
         print('Delete cell called')
         print('Index: ',index)
         content = self.archive[docID]['page'][index]['content']
-        if 'type' in content:
+        if type(content) is dict:
             if content['type'] == 'image':
                 filename = content['img']
-                os.remove(os.getcwd()+'/Archieves/Images/'+filename)
+                os.remove(os.getcwd()+'/Archieves/'+docID+'/Images/'+filename)
         elif startWith('!ref',content):
             print('Deleting the refCell')
             self.references[docID]['refCell'] = ''
@@ -211,6 +217,16 @@ class WillNotebook(object):
                 output = self.handleTables(content)
             elif startWith('!-',content):
                 output = self.handleBullets(content)
+            elif startWith('!keyfor',content):
+                output = self.handleBibKeySearch(docID,content)
+            elif startWith('!addref',content):
+                output = self.handleInsertBibEntry(docID,content)
+            elif startWith('!delref',content):
+                output = self.handleDeleteBibEntry(docID,content)
+            elif startWith('!infofor',content):
+                output = self.handleInfoForBibEntry(docID,content)
+            elif startWith('!todo',content):
+                output = self.handleTODO(content)
             else:
                 output = content
         if emptyLine(output):
@@ -317,7 +333,7 @@ class WillNotebook(object):
         '''Updates the references'''
         self.references[docID]['References'] = ''
         ### Make the tex file and compile it ###
-        citations = open(os.getcwd()+'/Archieves/cit.tex','w')
+        citations = open(os.getcwd()+'/Archieves/'+docID+'/cit.tex','w')
         citations.write('''\\documentclass{article}
 \\usepackage[T1]{fontenc}
 \\usepackage[utf8]{inputenc}
@@ -333,12 +349,12 @@ class WillNotebook(object):
         citations.write('''\\bibliography{database}
 \end{document}''')
         citations.close()
-        call(['htlatex','cit.tex'],cwd=os.getcwd()+'/Archieves/')
-        call(['bibtex','cit.aux'],cwd=os.getcwd()+'/Archieves/')
-        call(['htlatex','cit.tex'],cwd=os.getcwd()+'/Archieves/')
+        call(['htlatex','cit.tex'],cwd=os.getcwd()+'/Archieves/'+docID)
+        call(['bibtex','cit.aux'],cwd=os.getcwd()+'/Archieves/'+docID)
+        call(['htlatex','cit.tex'],cwd=os.getcwd()+'/Archieves/'+docID)
         ### END: Make the tex file and compile it ###
         ### Parse the compiled HTML file ###
-        html = open(os.getcwd()+'/Archieves/cit.html','r',errors='replace',encoding='latin1')
+        html = open(os.getcwd()+'/Archieves/'+docID+'/cit.html','r',errors='replace',encoding='latin1')
         n = 0
         beginReference = False
         buffedLine = ''
@@ -350,7 +366,7 @@ class WillNotebook(object):
                 if 'class="noindent"' in line or 'class="indent"' in line or buffering:
                     print('entrou')
                     buffedLine += line # This is because if some references are too long and there is a new line, citation gets cut.
-                    print(buffedLine)
+                    #print(buffedLine)
                     if ')' in line:
                         self.references[docID]['keys'][refs[n]] = getRef(buffedLine)
                         buffedLine = ''
@@ -451,11 +467,108 @@ class WillNotebook(object):
     def handleTitle(self,content):
         title = content.replace('!title ','')
         return '<div class="title">'+title+'</div>'
+
+    def handleBibKeySearch(self,docID,content):
+        terms = content.replace('!keyfor ','').strip()
+        begin = '<font class="bibKeys dontprint">'
+        matchingKeys = ''
+        bibData = self.getBibKeys(docID,getInfo=True)
+        for key in bibData:
+            for term in terms:
+                if term in bibData[key]:
+                    matchingKeys += key+'\n'
+                    break
+        end = '</font>'
+        if matchingKeys:
+            return begin+matchingKeys+end
+        else:
+            return begin+'No matching result'+end
+
+    def getBibKeys(self,docID,bibText=None,getInfo=False):
+        if not docID in os.listdir(os.getcwd()+'/Archieves'):
+            os.mkdir(os.getcwd()+'/Archieves/'+docID)
+        if not 'database.bib' in os.listdir(os.getcwd()+'/Archieves/'+docID):
+            with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','w',encoding='utf8') as bib:
+                pass
+        if bibText:
+            bibData = bibText
+        else:
+            with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','r',encoding='utf8') as bib:
+                bibData = bib.read()
+        comma = 0
+        if getInfo:
+            keys = {}
+        else:
+            keys = []
+        while True:
+            try:
+                cursor = bibData.index('@',comma)
+                openBrace = bibData.index('{',cursor)
+                comma = bibData.index(',',openBrace)
+                key = bibData[openBrace+1:comma]
+                try:
+                    nextEntry = bibData.index('@',comma)
+                except ValueError:
+                    nextEntry = -1
+                if getInfo:
+                    keys[key] = bibData[cursor:nextEntry]
+                else:
+                    keys.append(key)
+            except ValueError:
+                break
+        return keys
+
+    def handleInsertBibEntry(self,docID,bibText):
+        bibText = bibText.replace('!addref ','').strip()
+        key = self.getBibKeys(docID,bibText=bibText)
+        if key:
+            key = key[0]
+            if key in self.getBibKeys(docID):
+                return error('Holy! Entry already exists in the database.')
+            else:
+                with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','a',encoding='utf8') as bib:
+                    bib.write(bibText+'\n\n')
+                return msg('Inserted bib entry')
+        else:
+            return error('Woops! This is not a valid bibtex entry.')
+
+    def handleDeleteBibEntry(self,docID,bibKey):
+        bibKey = bibKey.replace('!delref ','').strip()
+        if bibKey in self.getBibKeys(docID):
+            entry = self.getBibKeys(docID,getInfo=True)[bibKey].strip()+'\n\n'
+            with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','r',encoding='utf8') as bib:
+                bibData = bib.read()
+            bibData = bibData.replace(entry,'')
+            with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','w',encoding='utf8') as bib:
+                bib.write(bibData)
+            return msg('Deleted '+bibKey+' bib entry')
+        else:
+            return error('Woops! This key is not in the database.')
     
+    def handleInfoForBibEntry(self,docID,bibKey):
+        bibKey = bibKey.replace('!infofor ','').strip()
+        if bibKey in self.getBibKeys(docID):
+            entry = self.getBibKeys(docID,getInfo=True)[bibKey].strip()+'\n\n'
+            return msg(entry)
+        else:
+            return error('Woops! This key is not in the database.')
+
+    def handleTODO(self,content):
+        content = content.replace('!todo ','')
+        return '<font class="todo dontprint">TODO: '+content+'</font>'
+
     @cherrypy.expose
     def image(self,docID,cell,img,label,source,caption,width):
         def loadImg(filename):
-            i = open(os.getcwd()+'/Archieves/Images/'+filename,'wb')
+            try:
+                os.mkdir(os.getcwd()+'/Archieves/'+docID)
+            except FileExistsError:
+                pass
+            try:
+                os.mkdir(os.getcwd()+'/Archieves/'+docID+'/Images')
+            except FileExistsError:
+                pass
+            i = open(os.getcwd()+'/Archieves/'+docID+'/Images/'+filename,'wb')
             while True:
                 data = img.file.read(4096)
                 if not data:
@@ -499,7 +612,7 @@ class WillNotebook(object):
                     self.archive[docID]['page'][cell]['content']['label'] = label
                     self.archive[docID]['page'][cell]['content']['source'] = source
                     self.archive[docID]['page'][cell]['content']['caption'] = caption
-                    self.archive[docID]['page'][cell]['content']['width'] = width
+                    self.archive[docID]['page'][cell]['content']['width'] = imgWidth
             else:
                 if filename:
                     loadImg(filename)
@@ -508,11 +621,11 @@ class WillNotebook(object):
                     
                 self.archive[docID]['page'][cell] = {'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':'.'}
         if label:
-            output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+            output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>Source: '+source+'</center><br>'
         else:
-            output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+            output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>Source: '+source+'</center><br>'
         self.archive[docID]['page'][cell]['output'] = output
-        return output
+        return output.replace('@$docID$@',docID)
 
     def handleTables(self,content):
         table = '<center><table>'
@@ -554,10 +667,15 @@ class WillNotebook(object):
         elif extension == 'pdflatex':
             self.saveAs(docID,filename,extension,model)
             extension = 'pdf'
-        return serve_file(os.getcwd()+'/Archieves/'+filename+'.'+extension,"application/x-download","attachment")
+        return serve_file(os.getcwd()+'/Archieves/'+docID+'/'+filename+'.'+extension,"application/x-download","attachment")
 
     def saveAsWill(self,docID,filename):
-        archive = open(os.getcwd()+'/Archieves/'+filename+'.will','wb')
+        import tarfile
+        try:
+            os.mkdir(os.getcwd()+'/Archieves/'+docID)
+        except FileExistsError:
+            pass
+        archive = open(os.getcwd()+'/Archieves/'+docID+'/'+filename+'.wnb','wb')
         self.archive[docID]['references'] = self.references[docID]
         try:
             pickle.dump(self.archive[docID],archive)
@@ -566,8 +684,30 @@ class WillNotebook(object):
             self.archive[docID]['Locals'] = {}
             pickle.dump(self.archive[docID],archive)
         archive.close()
+        try:
+            os.mkdir(os.getcwd()+'/Archieves/'+docID+'/Images')
+        except FileExistsError:
+            pass
+        if not 'database.bib' in os.listdir(os.getcwd()+'/Archieves/'+docID):
+            db = open(os.getcwd()+'/Archieves/'+docID+'/database.bib','w')
+            db.close()
+        with tarfile.open(os.getcwd()+'/Archieves/'+docID+'/'+filename+'.will','w:xz') as will:
+            will.add(os.getcwd()+'/Archieves/'+docID+'/'+filename+'.wnb',arcname=filename+'.wnb')
+            will.add(os.getcwd()+'/Archieves/'+docID+'/database.bib',arcname='database.bib')
+            will.add(os.getcwd()+'/Archieves/'+docID+'/Images',arcname='Images')
 
     def saveAs(self,docID,filename,docFormat,model):
+        try:
+            os.mkdir(os.getcwd()+'/Archieves/'+docID)
+        except FileExistsError:
+            pass
+        try:
+            os.mkdir(os.getcwd()+'/Archieves/'+docID+'/Images')
+        except FileExistsError:
+            pass
+        if not 'database.bib' in os.listdir(os.getcwd()+'/Archieves/'+docID):
+            db = open(os.getcwd()+'/Archieves/'+docID+'/database.bib','w')
+            db.close()
         if model == 'article':
             texClass = 'article'
         elif model == 'usp':
@@ -576,13 +716,13 @@ class WillNotebook(object):
             texClass = 'report'
         if docFormat == 'tex':
             from texExporter import TexExporter
-            exporter = TexExporter(filename,texClass)
+            exporter = TexExporter(filename,docID,texClass)
         elif docFormat == 'pdflatex':
             from pdfLatexExporter import PdfLatexExporter
-            exporter = PdfLatexExporter(filename,texClass)
+            exporter = PdfLatexExporter(filename,docID,texClass)
         elif docFormat == 'docx':
             from docxExporter import DocxExporter
-            exporter = DocxExporter(filename,texClass)
+            exporter = DocxExporter(filename,docID,texClass)
 
         for cell in self.archive[docID]['page']:
             content = cell['content']
@@ -604,7 +744,7 @@ class WillNotebook(object):
                             exporter.addText(remaining)
                         else:
                             break
-            elif 'class="dontprint"' in cell['output']:
+            elif 'dontprint' in cell['output']:
                 show = False
             ### special cells ###
             elif 'type' in content and not type(content) == str:
@@ -613,7 +753,8 @@ class WillNotebook(object):
                     caption = content['caption']
                     source = content['source']
                     label = content['label']
-                    width = str(float(content['width'].replace('px','')))
+                    width = str(float(content['width'].replace('px',''))/800)
+                    print('On main.py image width is ',width)
                     exporter.addFigure(img,caption,source=source,label=label,width=width)
                 else:
                     raise NotImplemented
@@ -627,7 +768,7 @@ class WillNotebook(object):
                         label = row.replace('!tab ','')
                     elif not '|' in row:
                         if '!source ' in row:
-                            source = row.replace('!source ')
+                            source = row.replace('!source ','')
                         if row:
                             caption = row
                     else:
@@ -662,6 +803,9 @@ class WillNotebook(object):
                 exporter.addDate(date)
             elif '!makecover' in content.lower():
                 exporter.makeCover()
+            elif '!- ' in content.lower():
+                topic = cell['output'].replace('<li>','').replace('</li>','').strip()
+                exporter.addBullet(topic)
             else:
                 if show:
                     exporter.addText(cell['output'])
@@ -672,25 +816,44 @@ class WillNotebook(object):
 
     @cherrypy.expose
     def open(self,docID,toOpen):
+        import tarfile
         filename = toOpen.filename
-        d = open(os.getcwd()+'/Archieves/'+filename,'wb')
-        while True:
-            data = toOpen.file.read(4096)
-            if not data:
-                break
-            else:
-                d.write(data)
-            print('Loading...')
-        d.close()
-        req = self.openFile(docID,filename)
-        return req
+        try:
+            print('Trying to create a folder for the document')
+            os.mkdir(os.getcwd()+'/Archieves/'+docID)
+            print('Done')
+        except FileExistsError:
+            print('Document was open before. Overwriting')
+            import shutil
+            shutil.rmtree(os.getcwd()+'/Archieves/'+docID)
+            os.mkdir(os.getcwd()+'/Archieves/'+docID)
+            print('Done rewriting')
+        if '.will' in filename:
+            d = open(os.getcwd()+'/Archieves/'+docID+'/'+filename,'wb')
+            while True:
+                data = toOpen.file.read(4096)
+                if not data:
+                    break
+                else:
+                    d.write(data)
+                print('Loading...')
+            d.close()
+            with tarfile.open(os.getcwd()+'/Archieves/'+docID+'/'+filename,mode='r:xz') as will:
+                will.extractall(path=os.getcwd()+'/Archieves/'+docID+'/')
+            req = self.openFile(docID,filename)
+            return req
+        else:
+            return 'Filetype not suported for opening'
 
     @cherrypy.expose
     def openFile(self,docID,filename):
         self.archive[docID] = {}
         print('Openning file ',filename)
+        for f in os.listdir(os.getcwd()+'/Archieves/'+docID):
+            if '.wnb' in f:
+                filename = f
         try:
-            archive = open(os.getcwd()+'/Archieves/'+filename,'rb')
+            archive = open(os.getcwd()+'/Archieves/'+docID+'/'+filename,'rb')
         except:
             content = 'Error loading file. File not found.'
             output = content
@@ -720,12 +883,12 @@ class WillNotebook(object):
                     caption = stuff['content']['caption']
                     width = stuff['content']['width']
 
-                    notebook += '<center id="c'+str(cell)+'"><form id="F'+str(cell)+'" enctype="multipart/form-data" method="POST" action="image" style="display: none;"><input type="file" name="img" value="Archieves/Images/'+img+'" id="'+str(cell)+'" style="display: none;"><br>Label:<input name="label" value="'+label+'" id="L'+str(cell)+'"><br>Caption:<input name="caption" value="'+caption+'" id="C'+str(cell)+'"><br>Source:<input name="source" value="'+source+'" id="S'+str(cell)+'"><br>Width:<input id="SL'+str(cell)+'"name="width" type="range" min="0" max="1" step="0.01" value="'+width.replace('px','')+'"><br><img id="P'+str(cell)+'" src="Archieves/Images/'+img+'" style="width:'+width+'"></form></center>'
-                    output = stuff['output']
+                    notebook += '<center id="c'+str(cell)+'"><form id="F'+str(cell)+'" enctype="multipart/form-data" method="POST" action="image" style="display: none;"><input type="file" name="img" value="Archieves/'+docID+'/Images/'+img+'" id="'+str(cell)+'" style="display: none;"><br>Label:<input name="label" value="'+label+'" id="L'+str(cell)+'"><br>Caption:<input name="caption" value="'+caption+'" id="C'+str(cell)+'"><br>Source:<input name="source" value="'+source+'" id="S'+str(cell)+'"><br>Width:<input id="SL'+str(cell)+'"name="width" type="range" min="0" max="1" step="0.01" value="'+width.replace('px','')+'"><br><img id="P'+str(cell)+'" src="Archieves/'+docID+'/Images/'+img+'" style="width:'+width+'"></form></center>'
+                    output = stuff['output'].replace('@$docID$@',docID)
                     notebook += '<center tabindex="0" id="co'+str(cell)+'"><div id="o'+str(cell)+'" class="paragraph">'+output+'</div></center>'
             else:
                 content = stuff['content']
-                output = stuff['output']
+                output = stuff['output'].replace('@$docID$@',docID)
                 notebook += '<center id="c'+str(cell)+'"><textarea id="'+str(cell)+'" action="evalCell" style="width: 800px; display: none;">'+content+'</textarea></center>'
                 notebook += '<center tabindex="0" id="co'+str(cell)+'"><div id="o'+str(cell)+'" class="paragraph">'+output+'</div></center>'
         return notebook
