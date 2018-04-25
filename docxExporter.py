@@ -40,6 +40,10 @@ class DocxExporter():
         self.figNumber = 1
         self.tabNumber = 1
         self.inBullet = False
+        from docx.enum.style import WD_STYLE_TYPE
+        styles = self.document.styles
+        for i in styles:
+            print(i)
 
     def formatText(self,text,p):
         '''handle bold, italic, etc '''
@@ -236,11 +240,11 @@ class DocxExporter():
 
         def cover(coverType,titleText,author,advisor,concentration,department,modelType,area,local,dateText):
             #template
-            tab = self.document.add_table(cols=2, rows=4, style='SimpleTable2')
-            set_row_height(tab.rows[0],90)
-            set_row_height(tab.rows[1],30)
-            set_row_height(tab.rows[2],108)
-            set_row_height(tab.rows[3],10)
+            tab = self.document.add_table(cols=2, rows=4, style='Normal Table')
+            set_row_height(tab.rows[0],80)#90)
+            set_row_height(tab.rows[1],20)#30)
+            set_row_height(tab.rows[2],98)#108)
+            set_row_height(tab.rows[3],10)#10)
             authorName = tab.cell(0,0).merge(tab.cell(0,1))
             authorName.width = Mm(210-50)
             authorName.text = author
@@ -257,7 +261,7 @@ class DocxExporter():
             apresBlank.width = Mm((210-50)/2.0)
             apres = tab.cell(2,1)
             apres.width = Mm((210-50)/2.0)
-            apres.text = 'Documento bla'
+            apres.text = 'Texto apresentado à Escola Politécnica da Universidade de São Paulo para o exame de qualificação.'
             apres.paragraphs[0].style = 'Normal'
             apres.paragraphs[0].bold = True
             apres.paragraphs[0].alignment = 3
