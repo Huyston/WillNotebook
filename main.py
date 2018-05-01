@@ -466,10 +466,10 @@ class WillNotebook(object):
         nonNumbered = False
         for line in content.split('\n'):
             if '!eq*' in line:
-                label = line.replace('!eq* ','')
+                label = line.replace('!eq*','').strip()
                 nonNumbered = True
             elif '!eq' in line:
-                label = line.replace('!eq ','')
+                label = line.replace('!eq','').strip()
             else:
                 eqContent += line
         if nonNumbered:
