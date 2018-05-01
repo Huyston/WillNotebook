@@ -463,15 +463,25 @@ class WillNotebook(object):
 
     def handleEquations(self,content):
         eqContent = ''
+        nonNumbered = False
         for line in content.split('\n'):
-            if '!eq' in line:
+            if '!eq*' in line:
+                label = line.replace('!eq* ','')
+                nonNumbered = True
+            elif '!eq' in line:
                 label = line.replace('!eq ','')
             else:
                 eqContent += line
-        eq = '\\begin{equation}'
+        if nonNumbered:
+            eq = '\\begin{equation*}'
+        else:
+            eq = '\\begin{equation}'
         if label.replace('<label>',''):
             eq += '\label{'+label+'}\n'
-        eq += eqContent+'\end{equation}'
+        if nonNumbered:
+            eq += eqContent+'\end{equation*}'
+        else:
+            eq += eqContent+'\end{equation}'
         return eq
 
     def handleTitle(self,content):
