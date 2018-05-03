@@ -104,6 +104,9 @@ class TexExporter():
         self.document.write(tex+'\n\n')
 
     def addFigure(self,img,caption,source='',label='',width='0.5'):
+        citations = getAllInside('\cite{','}',source)
+        for cite in citations:
+            source = source.replace(cite,'\\protect'+cite)
         figure = '''\\begin{figure}[!h]
 \centering
 \caption{'''+caption+'''}

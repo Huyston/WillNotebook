@@ -263,6 +263,25 @@ class WillNotebook(object):
         self.updateRefCell(docID)
         return refUpdate, content
 
+    def renderText(self,docID,content):
+            if '{{' in content and '}}' in content:
+                content = self.handleValues(docID,content)
+            ## Order is important here, first the ***
+            if '***' in content:
+                print('BoldItalic parts')
+                content = self.handleBoldItalics(content)
+            if '**' in content:
+                print('Bold parts')
+                content = self.handleBold(content)
+            if '*' in content:
+                print('Italic parts')
+                content = self.handleItalics(content)
+            if '\cite{' in content and '}' in content:
+                toCitate = getAllInside('\cite{','}',content)
+                for citation in toCitate:
+                    content = content.replace(citation,self.references[docID]['keys'][citation])    
+            return content
+
     def handlePythonCode(self,docID,content):
         with Capturing() as output:
             try:
@@ -780,6 +799,8 @@ class WillNotebook(object):
                     caption = content['caption']
                     source = content['source']
                     label = content['label']
+                    source = self.renderText(docID,source)
+                    caption = self.renderText(docID,caption)
                     width = str(float(content['width'].replace('px',''))/800)
                     print('On main.py image width is ',width)
                     exporter.addFigure(img,caption,source=source,label=label,width=width)
