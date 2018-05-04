@@ -109,12 +109,16 @@ class WillNotebook(object):
             self.references[docID]['refCell'] = ''
             self.references[docID]['serverRefCell'] = ''
         changedRefs = False
-        if '\cite{' in content:
+        if '\cite{' in content or '\citeonline{' in content:
             print('Counts: ',self.references[docID]['counts'])
             citations = getAllInside('\cite{','}',content)
+            citations.update(getAllInside('\citeonline{','}',content))
             for citation in citations:
                 print('Citation deletion: ', citation)
-                citationList = getInside('\cite{','}',citation).split(',')
+                if '\cite{' in citation:
+                    citationList = getInside('\cite{','}',citation).split(',')
+                elif '\citeonline{' in citation:
+                    citationList = getInside('\citeonline{','}',citation).split(',')
                 for individual in citationList:
                     self.references[docID]['counts'][individual] -= content.count(citation)
                     if self.references[docID]['counts'][individual] == 0:
@@ -199,12 +203,16 @@ class WillNotebook(object):
         ### Check if there was any citation and if it changed ###
         changedCitations = False
         citations = getAllInside('\cite{','}',content)
+        citations.update(getAllInside('\citeonline{','}',content))
         if not citations:
             if 'citations' in self.archive[docID]['page'][cell]:
                 changedCitations = True
                 for citation in self.archive[docID]['page'][cell]['citations']:
                     n = self.archive[docID]['page'][cell]['citations'][citation]
-                    citationList = getInside('\cite{','}',citation).split(',')
+                    if '\cite{' in citation:
+                        citationList = getInside('\cite{','}',citation).split(',')
+                    elif '\citeonline{' in citation:
+                        citationList = getInside('\citeonline{','}',citation).split(',')
                     for individual in citationList:
                         self.references[docID]['counts'][individual] -= n
                         print('Citation '+individual+' was removed from content')
@@ -221,7 +229,10 @@ class WillNotebook(object):
                     if not citation in citations:
                         print('Removing citation from counters')
                         n = self.archive[docID]['page'][cell]['citations'][citation]
-                        citationList = getInside('\cite{','}',citation).split(',')
+                        if '\cite{' in citation:
+                            citationList = getInside('\cite{','}',citation).split(',')
+                        elif '\citeonline{' in citation:
+                            citationList = getInside('\citeonline{','}',citation).split(',')
                         for individual in citationList:
                             self.references[docID]['counts'][individual] -= n
                             if self.references[docID]['counts'][individual] == 0:
@@ -234,7 +245,10 @@ class WillNotebook(object):
                     else:
                         print('Updating citation counters')
                         oldN = self.archive[docID]['page'][cell]['citations'][citation]
-                        citationList = getInside('\cite{','}',citation).split(',')
+                        if '\cite{' in citation:
+                            citationList = getInside('\cite{','}',citation).split(',')
+                        elif '\citeonline{' in citation:
+                            citationList = getInside('\citeonline{','}',citation).split(',')
                         for individual in citationList:
                             self.references[docID]['counts'][individual] -= oldN
         refUpdate = ''
@@ -258,7 +272,7 @@ class WillNotebook(object):
             if '*' in content:
                 print('Italic parts')
                 content = self.handleItalics(content)
-            if '\cite{' in content and '}' in content:
+            if ('\cite{' in content or '\citeonline{' in content) and '}' in content:
                 content = self.handleCitations(docID,cell,content)
         self.updateRefCell(docID)
         return refUpdate, content
@@ -417,6 +431,7 @@ class WillNotebook(object):
     def handleCitations(self,docID,cell,content):
         print('Citations working')
         toCitate = getAllInside('\cite{','}',content)
+        toCitate.update(getAllInside('\citeonline{','}',content))
         print('Citation list: ',toCitate)
         ## Check if there is a new citation
         changed = False
@@ -426,7 +441,10 @@ class WillNotebook(object):
                     self.archive[docID]['page'][cell]['citations'] = {}
                 self.references[docID]['keys'][citation] = ''
                 self.archive[docID]['page'][cell]['citations'][citation] = content.count(citation)
-                citationList = getInside('\cite{','}',citation).split(',')
+                if '\cite{' in citation:
+                    citationList = getInside('\cite{','}',citation).split(',')
+                elif '\citeonline{' in citation:
+                    citationList = getInside('\citeonline{','}',citation).split(',')
                 for individual in citationList:
                     if not individual in self.references[docID]['counts']:
                         self.references[docID]['counts'][individual] = 0
@@ -435,7 +453,10 @@ class WillNotebook(object):
                 print('NEW REF ADDED')
             else:
                 print('Adding')
-                citationList = getInside('\cite{','}',citation).split(',')
+                if '\cite{' in citation:
+                    citationList = getInside('\cite{','}',citation).split(',')
+                elif '\citeonline{' in citation:
+                    citationList = getInside('\citeonline{','}',citation).split(',')
                 for individual in citationList:
                     if not individual in self.references[docID]['counts']:
                         self.references[docID]['counts'][individual] = 0
