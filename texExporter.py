@@ -47,7 +47,7 @@ class TexExporter():
 \\usepackage{graphicx} %for displaying figures
 \\usepackage{mathtools} %for displaying math
 \\usepackage{listings} %for displaying code
-\\usepackage{caption}
+\\usepackage[font=small]{caption}
 ''')
 
         for package in self.addPackages:
@@ -199,6 +199,9 @@ Source: '''+source+'''
     def makeCover(self):
         if self.docType == 'abntepusp':
             self.document.write('\\capa{}\n\\folhaderosto{}\n\n')
+            self.document.write('\\tableofcontents\n')
+            self.document.write('\\listoffigures\n')
+            self.document.write('\\listoftables\n\n')
 
     def addBullet(self,topic):
         topic = self.formatText(topic)

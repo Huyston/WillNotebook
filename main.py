@@ -579,7 +579,7 @@ class WillNotebook(object):
         return keys
 
     def handleInsertBibEntry(self,docID,bibText):
-        bibText = bibText.replace('!addref ','').strip()
+        bibText = bibText.replace('!addref','').strip()
         key = self.getBibKeys(docID,bibText=bibText)
         if key:
             key = key[0]
@@ -593,7 +593,7 @@ class WillNotebook(object):
             return error('Woops! This is not a valid bibtex entry.')
 
     def handleDeleteBibEntry(self,docID,bibKey):
-        bibKey = bibKey.replace('!delref ','').strip()
+        bibKey = bibKey.replace('!delref','').strip()
         if bibKey in self.getBibKeys(docID):
             entry = self.getBibKeys(docID,getInfo=True)[bibKey].strip()+'\n\n'
             with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','r',encoding='utf8') as bib:
@@ -606,7 +606,7 @@ class WillNotebook(object):
             return error('Woops! This key is not in the database.')
     
     def handleInfoForBibEntry(self,docID,bibKey):
-        bibKey = bibKey.replace('!infofor ','').strip()
+        bibKey = bibKey.replace('!infofor','').strip()
         if bibKey in self.getBibKeys(docID):
             entry = self.getBibKeys(docID,getInfo=True)[bibKey].strip()+'\n\n'
             return msg(entry)
