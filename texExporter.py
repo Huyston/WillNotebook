@@ -87,7 +87,9 @@ class TexExporter():
             content = text
         return content
 
-    def addText(self,text):
+    def addText(self,text,output):
+        if '!eq' in text:
+            text = output
         formatedText = self.formatText(text)
         self.document.write(formatedText+'\n\n')
 
@@ -140,7 +142,7 @@ class TexExporter():
                 for heading in headings:
                     tableCode += heading + ' & '
                 tableCode = tableCode[:-3]
-                tableCode += '\\\\\n'
+                tableCode += '\\\\\n\hline\n'
             elif '|' in row:
                 colText = row.split('|')
                 for text in colText:
@@ -216,7 +218,10 @@ Source: '''+source+'''
             self.document.write('\\item '+topic+'\n')
             self.document.write('\\end{itemize}\n\n')
 
+    def addReferences(self,refs):
+        self.document.write('\\newpage\n')
+        self.document.write('\\bibliography{database}\n\n')
+
     def close(self):
         self.document.write('\\end{document}')
         self.document.close()
-        print('Ta aqu')

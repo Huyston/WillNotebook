@@ -10,6 +10,7 @@ class PdfLatexExporter(TexExporter):
         filename = os.path.basename(self.document.name).replace('.tex','')
         print('The filename is: ',filename)
         call(['pdflatex','-interaction=nonstopmode',filename+'.tex'], cwd=os.getcwd()+'/Archieves/'+self.docID)
-        call(['bibtex','-interaction=nonstopmode',filename+'.aux'], cwd=os.getcwd()+'/Archieves/'+self.docID)
+        call(['bibtex',filename+'.aux'], cwd=os.getcwd()+'/Archieves/'+self.docID)
+        call(['bibtex',filename+'.aux'], cwd=os.getcwd()+'/Archieves/'+self.docID)
         call(['pdflatex','-interaction=nonstopmode',filename+'.tex'], cwd=os.getcwd()+'/Archieves/'+self.docID)
         call(['pdflatex','-interaction=nonstopmode',filename+'.tex'], cwd=os.getcwd()+'/Archieves/'+self.docID)

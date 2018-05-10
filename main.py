@@ -794,7 +794,7 @@ class WillNotebook(object):
         for cell in self.archive[docID]['page']:
             content = cell['content']
             show = True
-            if '<h' in cell['output']:
+            if '<h' in cell['output'] and not '!ref' in content:
                 for level in range(1,6):
                     n = str(level)
                     if '<h'+n in cell['output']:
@@ -875,9 +875,11 @@ class WillNotebook(object):
             elif '!- ' in content.lower():
                 topic = cell['output'].replace('<li>','').replace('</li>','').strip()
                 exporter.addBullet(topic)
+            elif '!ref' in content:
+                exporter.addReferences(cell['output'])
             else:
                 if show:
-                    exporter.addText(cell['output'])
+                    exporter.addText(content,cell['output'])
 
         print('ta no close')
         exporter.close()

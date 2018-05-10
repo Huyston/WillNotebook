@@ -138,7 +138,7 @@ class DocxExporter():
             if textBuffer:
                 p.add_run(textBuffer)
 
-    def addText(self,text):
+    def addText(self,content,text):
         p = self.document.add_paragraph()
         self.formatText(text,p)
 
@@ -311,6 +311,10 @@ class DocxExporter():
     def addBullet(self,topic):
         p = self.document.add_paragraph(style='List Bullet') 
         self.formatText(topic,p)
+    
+    def addReferences(self,refs):
+        for ref in refs:
+            self.addText(refs)
 
     def close(self):
         self.document.save(os.getcwd()+'/Archieves/'+self.docID+'/'+self.filename+'.docx')
