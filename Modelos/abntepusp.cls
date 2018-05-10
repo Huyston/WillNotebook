@@ -1910,7 +1910,7 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
   \renewcommand{\PoliTipoDocData}{Exame de Qualifica??o (Doutorado)}
   \comentario{\vspace{1.0cm}
     Document presented to Polytechnic
-    Scholl of Sao Paulo University
+    School of Sao Paulo University
     for the realization of the
     PhD Qualification Exam in
     #1.}%
