@@ -697,13 +697,17 @@ class WillNotebook(object):
     def handleTables(self,content):
         table = '<center><table>'
         caption = ''
+        source = ''
         label = ''
         for row in content.split('\n'):
             if '!tab' in row:
                 label = row.replace('!tab ','')
             elif not '|' in row:
                 if row:
-                    caption = '<div class="tableCaption" id="'+label+'">'+row+'</div>'
+                    if not caption:
+                        caption = '<div class="tableCaption" id="'+label+'">'+row+'</div>'
+                    else:
+                        source = row
             elif '||' in row:
                 headings = row.split('||')
                 table += '<tr>\n'
@@ -717,7 +721,10 @@ class WillNotebook(object):
                     table += '<td>'+col+'</td>'
                 table += '</tr>'
             table += '\n'
-        table += '</table></center>\n'
+        if not source:
+            table += '</table></center>\n'
+        else:
+            table += '</table><br>Source: '+source+'</center>\n'
         return caption+table
 
     def handleBullets(self,content):
