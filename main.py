@@ -843,10 +843,11 @@ class WillNotebook(object):
                     if '!tab' in row:
                         label = row.replace('!tab ','')
                     elif not '|' in row:
-                        if '!source ' in row:
-                            source = row.replace('!source ','')
                         if row:
-                            caption = row
+                            if not caption:
+                                caption = row
+                            else:
+                                source = row
                     else:
                         table += row+'\n'
                 exporter.addTable(table,caption,label,source)

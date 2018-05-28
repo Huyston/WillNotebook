@@ -152,8 +152,8 @@ class TexExporter():
         tableCode += '''\hline
 \end{tabular}'''
         if source:
-            tableCode += '''\\bigskip
-Source: '''+source+'''
+            tableCode += '''
+\caption*{Source: '''+source+'''}
 '''
         tableCode += '\end{table}'
         self.document.write(tableCode+'\n\n')
