@@ -515,11 +515,12 @@ def ack(req):
         ref = ref.replace('cell="'+refCell+'"','')
         if refCell:
             document['o'+refCell].innerHTML =  ref
-    updateSectionNumbers()
-    updateFigureNumbers()
-    updateTableNumbers()
-    handleReferences() # this order is important. If it comes after mathjax, the \ref command gets evalluated by it first
-    window.math.reNumber()
+    if not req.text == 'Cell inserted':
+        updateSectionNumbers()
+        updateFigureNumbers()
+        updateTableNumbers()
+        handleReferences() # this order is important. If it comes after mathjax, the \ref command gets evalluated by it first
+        window.math.reNumber()
 
 def renderFile(req):
     global page,cellCounter
