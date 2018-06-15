@@ -443,10 +443,19 @@ def receive(req):
                 if refCell:
                     document['o'+refCell].innerHTML =  ref
             document['o'+outIndex].innerHTML =  req.text
-            updateSectionNumbers()
-            updateTableNumbers()
-            handleReferences()
-            window.math.reNumber()
+            if '<h' in req.text:
+                print('Tem section')
+                updateSectionNumbers()
+            if '<table>' in req.text:
+                print('Tem table')
+                updateTableNumbers()
+            if '\\eq{' in req.text or '\\fig{' in req.text or '\\tab{' in req.text or '\\sec{' in req.text or '\\begin{equation}' in req.text or '\\begin{*equation}' in req.text:
+                print('Tem ref')
+                # handleReferences needs to run when a new equation is added. This affects performance. Try to minimize it.
+                handleReferences() # this order is important. If it comes after mathjax, the \ref command gets evalluated by it first
+            if '\\eq{' in req.text or '\\begin{equation}' in req.text or '\\begin{*equation}' in req.text:
+                print('Tem math')
+                window.math.reNumber()
             #window.MathJax.Hub.Queue(["Typeset",window.MathJax.Hub])
             print('o'+outIndex)
     except Exception as e:
@@ -468,8 +477,8 @@ def receiveImg(req):
                 document['o'+refCell].innerHTML =  ref
         document['o'+outIndex].innerHTML = req
         updateFigureNumbers()
-        updateTableNumbers()
-        handleReferences()
+        if '\\eq{' in req.text or '\\fig{' in req.text or '\\tab{' in req.text or '\\sec{' in req.text:
+            handleReferences()
         print('o'+outIndex)
     except Exception as e:
         print('Exception in recvImg: ',e)
@@ -516,11 +525,16 @@ def ack(req):
         if refCell:
             document['o'+refCell].innerHTML =  ref
     if not req.text == 'Cell inserted':
-        updateSectionNumbers()
-        updateFigureNumbers()
-        updateTableNumbers()
-        handleReferences() # this order is important. If it comes after mathjax, the \ref command gets evalluated by it first
-        window.math.reNumber()
+        if '<h' in req.text:
+            updateSectionNumbers()
+        if '<img' in req.text:
+            updateFigureNumbers()
+        if '<table>' in req.text:
+            updateTableNumbers()
+        if '\\eq{' in req.text or '\\fig{' in req.text or '\\tab{' in req.text or '\\sec{' in req.text:
+            handleReferences() # this order is important. If it comes after mathjax, the \ref command gets evalluated by it first
+        if '\\eq{' in req.text or '\\begin{equation}' in req.text or '\\begin{*equation}' in req.text:
+            window.math.reNumber()
 
 def renderFile(req):
     global page,cellCounter
