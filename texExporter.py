@@ -47,7 +47,7 @@ class TexExporter():
 \\usepackage{graphicx} %for displaying figures
 \\usepackage{mathtools} %for displaying math
 \\usepackage{listings} %for displaying code
-\\usepackage{caption}
+\\usepackage[font=small]{caption}
 ''')
 
         for package in self.addPackages:
@@ -87,7 +87,9 @@ class TexExporter():
             content = text
         return content
 
-    def addText(self,text):
+    def addText(self,text,output):
+        if '!eq' in text:
+            text = output
         formatedText = self.formatText(text)
         self.document.write(formatedText+'\n\n')
 
@@ -104,6 +106,9 @@ class TexExporter():
         self.document.write(tex+'\n\n')
 
     def addFigure(self,img,caption,source='',label='',width='0.5'):
+        citations = getAllInside('\cite{','}',source)
+        for cite in citations:
+            source = source.replace(cite,'\\protect'+cite)
         figure = '''\\begin{figure}[!h]
 \centering
 \caption{'''+caption+'''}
@@ -137,7 +142,7 @@ class TexExporter():
                 for heading in headings:
                     tableCode += heading + ' & '
                 tableCode = tableCode[:-3]
-                tableCode += '\\\\\n'
+                tableCode += '\\\\\n\hline\n'
             elif '|' in row:
                 colText = row.split('|')
                 for text in colText:
@@ -147,8 +152,8 @@ class TexExporter():
         tableCode += '''\hline
 \end{tabular}'''
         if source:
-            tableCode += '''\\bigskip
-Source: '''+source+'''
+            tableCode += '''
+\caption*{Source: '''+source+'''}
 '''
         tableCode += '\end{table}'
         self.document.write(tableCode+'\n\n')
@@ -194,6 +199,9 @@ Source: '''+source+'''
     def makeCover(self):
         if self.docType == 'abntepusp':
             self.document.write('\\capa{}\n\\folhaderosto{}\n\n')
+            self.document.write('\\tableofcontents\n')
+            self.document.write('\\listoffigures\n')
+            self.document.write('\\listoftables\n\n')
 
     def addBullet(self,topic):
         topic = self.formatText(topic)
@@ -213,7 +221,10 @@ Source: '''+source+'''
             self.document.write('\\item '+topic+'\n')
             self.document.write('\\end{itemize}\n\n')
 
+    def addReferences(self,refs):
+        self.document.write('\\newpage\n')
+        self.document.write('\\bibliography{database}\n\n')
+
     def close(self):
         self.document.write('\\end{document}')
         self.document.close()
-        print('Ta aqu')

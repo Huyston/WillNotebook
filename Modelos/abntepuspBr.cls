@@ -28,7 +28,7 @@
 %
 %   Author (class): Miguel Vinicius Santini Frasson
 %
-%   Author of adaptations to the particular rules of the Escola Polit?cnica, University of S?o Paulo: Paulo Barreto (original version: 2003)
+%   Author of adaptations to the particular rules of the Escola Politécnica, University of São Paulo: Paulo Barreto (original version: 2003)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -1452,7 +1452,7 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
   \setcounter{chapter}{0}
   \resetsubcounters{chapter}
   \gdef\thechapter{\Alph{chapter}}
-  \gdef\@chapapp{Appendix}
+  \gdef\@chapapp{Apendice}
   \renewcommand{\anapchaptername}{\appendixname}
   \global\let\@chapter\@anapchapter}
 
@@ -1462,7 +1462,7 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
   \setcounter{chapter}{0}
   \resetsubcounters{chapter}
   \gdef\thechapter{\Alph{chapter}}
-  \gdef\@chapapp{Annex}
+  \gdef\@chapapp{Anexo}
   \renewcommand{\anapchaptername}{\annexname}
   \global\let\@chapter\@anapchapter}
 
@@ -1512,7 +1512,7 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
   \ifthenelse{\boolean{@twocolumn}}%
     {\setboolean{ABNTrestorecol}{true}\onecolumn}%
     {\setboolean{ABNTrestorecol}{false}}%
-  \renewcommand{\listfigurename}{List of Figures}
+  \renewcommand{\listfigurename}{Lista de Ilustrações}
   \otherheadtrue\pretextualchapter{\listfigurename}
   \@starttoc{lof}%
   \ifthenelse{\boolean{ABNTrestorecol}}{\twocolumn}{}%
@@ -1534,7 +1534,7 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
 \let\listadetabelas\listoftables\relax
 
 % ====  \listofabbrv  ====
-\newcommand{\listabbrvname}{List of Abbreviations}
+\newcommand{\listabbrvname}{Lista de Abreviaturas e Siglas}
 \newenvironment{listofabbrv}[1]{
         \otherheadtrue\pretextualchapter{\listabbrvname}
         \begin{list}{\textbf{??}}{
@@ -1552,7 +1552,7 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
 }
 
 % ====  \listofsymbols  ====
-\newcommand{\listsymbolname}{List of Symbols}
+\newcommand{\listsymbolname}{Lista de Símbolos}
 \newenvironment{listofsymbols}[1]{
         \otherheadtrue\pretextualchapter{\listsymbolname}
         \begin{list}{\textbf{??}}{
@@ -1578,7 +1578,7 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
    \thispagestyle{\chaptertitlepagestyle}%
    \global\@topnum\z@%
    \@afterindentfalse%
-\renewcommand{\bibname}{References} % adapta??o para ABNT/EPUSP
+\renewcommand{\bibname}{Refer\^encias} % adaptação para ABNT/EPUSP
    \@mkboth{\bibname}{\bibname}% end \chapter*{\bibname...}
    \ifthenelse{\boolean{ABNTincludeintoc}}%
       {\ABNTaddcontentsline{toc}{chapter}{\bibname}}%
@@ -1720,7 +1720,7 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
 
 \providecommand{\ABNTorientadordata}{}
 \providecommand{\ABNTorientadorname}{}
-\newcommand{\orientador}[2][Advisor:\vspace{1mm}\\]%
+\newcommand{\orientador}[2][Orientador:\vspace{1mm}\\]%
   {\renewcommand{\ABNTorientadorname}{#1}%
    \renewcommand{\ABNTorientadordata}{#2}}
 \newcommand{\orientadornameformat}{}
@@ -1748,7 +1748,7 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
 
 \providecommand{\ABNTareaconcdata}{}
 \providecommand{\ABNTareaconcname}{}
-\newcommand{\areaConcentracao}[2][Field of concentration:\vspace{1mm}\\]%
+\newcommand{\areaConcentracao}[2][Área de Concentração:\vspace{1mm}\\]%
   {\renewcommand{\ABNTareaconcname}{#1}%
    \renewcommand{\ABNTareaconcdata}{#2}}
 \newcommand{\areaconcnameformat}{}
@@ -1775,7 +1775,7 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
     {\autorformat \ABNTautordata} \\[8cm] 
     {\tituloformat \ABNTuppercasetitulodata}
 
-    % coment?rio
+    % comentário
     \vspace{2cm}
     \hspace{.45\textwidth} % posicionando a minipage 
     \begin{minipage}{.52\textwidth} 
@@ -1805,7 +1805,7 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
     {\autorformat \ABNTautordata} \\[8cm] 
     {\tituloformat \ABNTuppercasetitulodata}
 
-    % coment?rio
+    % comentário
     \vspace{2cm}
     \hspace{.45\textwidth} % posicionando a minipage 
     \begin{minipage}{.52\textwidth} 
@@ -1865,98 +1865,92 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
 \newcommand{\PoliTipoDocData}{}
 
 \newcommand{\monografiaFormatura}{%
-  \renewcommand{\PoliTipoDocData}{Monografia (Gradua??o em Engenharia de Computa??o)}
+  \renewcommand{\PoliTipoDocData}{Monografia (Graduação em Engenharia de Computação)}
   \comentario{\vspace{1.0cm}
-    Texto apresentado ? Escola
-    Polit?cnica da Universidade
-    de S?o Paulo como requisito
-    para a conclus?o do curso de
-    gradua??o em Engenharia de Computa??o,
+    Texto apresentado à Escola
+    Politécnica da Universidade
+    de São Paulo como requisito
+    para a conclusão do curso de
+    graduação em Engenharia de Computação,
     junto ao \PoliDepartamentoData.}%
 }
 
 \newcommand{\monografiaMBA}{%
   \renewcommand{\PoliTipoDocData}{Monografia (MBA em Redes de Computadores)}
   \comentario{\vspace{1.0cm}
-    Texto apresentado ? Escola
-    Polit?cnica da Universidade
-    de S?o Paulo como requisito
-    para obten??o do T?tulo de
+    Texto apresentado à Escola
+    Politécnica da Universidade
+    de São Paulo como requisito
+    para obtenção do Título de
     Especialista (MBA) em Redes de
     Computadores, junto ao 
     \PoliDepartamentoData.}%
 }
 
 \newcommand{\qualificacaoMSc}[1]{%
-  \renewcommand{\PoliTipoDocData}{Exame de Qualifica??o (Mestrado)}
+  \renewcommand{\PoliTipoDocData}{Exame de Qualificação (Mestrado)}
   \comentario{\vspace{1.0cm}
-    Documento apresentado ? Escola
-    Polit?cnica da Universidade
-    de S?o Paulo para a realiza??o
-    do Exame de Qualifica??o
+    Documento apresentado à Escola
+    Politécnica da Universidade
+    de São Paulo para a realização
+    do Exame de Qualificação
     de Mestrado em #1.}%
 }
 
 \newcommand{\dissertacao}[1]{%
-  \renewcommand{\PoliTipoDocData}{Disserta??o (Mestrado)}
+  \renewcommand{\PoliTipoDocData}{Dissertação (Mestrado)}
   \comentario{\vspace{1.0cm}
-    Disserta??o apresentada ? Escola
-    Polit?cnica da Universidade de
-    S?o Paulo para obten??o do
-    T?tulo de Mestre em #1.}%
+    Dissertação apresentada à Escola
+    Politécnica da Universidade de
+    São Paulo para obtenção do
+    Título de Mestre em #1.}%
 }
 
 \newcommand{\qualificacaoDr}[1]{%
-  \renewcommand{\PoliTipoDocData}{Exame de Qualifica??o (Doutorado)}
+  \renewcommand{\PoliTipoDocData}{Exame de Qualificação (Doutorado)}
   \comentario{\vspace{1.0cm}
-    Document presented to Polytechnic
-    School of Sao Paulo University
-    for the realization of the
-    PhD Qualification Exam in
-    #1.}%
+    Documento apresentado à Escola
+    Politécnica da Universidade
+    de São Paulo para a realização
+    do Exame de Qualificação
+    de Doutorado em #1.}%
 }
-%    Documento apresentado ? Escola
-%    Polit?cnica da Universidade
-%    de S?o Paulo para a realiza??o
-%    do Exame de Qualifica??o
-%    de Doutorado em #1.}%
-%}
 
 \newcommand{\teseDr}[1]{%
   \renewcommand{\PoliTipoDocData}{Tese (Doutorado)}
   \comentario{\vspace{1.0cm}
-    Tese apresentada ? Escola
-    Polit?cnica da Universidade de
-    S?o Paulo para obten??o do
-    T?tulo de Doutor em #1.}%
+    Tese apresentada à Escola
+    Politécnica da Universidade de
+    São Paulo para obtenção do
+    Título de Doutor em #1.}%
 }
 
 \newcommand{\teseLD}{%
-  \renewcommand{\PoliTipoDocData}{Tese (Livre Doc?ncia)}
+  \renewcommand{\PoliTipoDocData}{Tese (Livre Docência)}
   \comentario{\vspace{1.0cm}
-    Tese apresentada ? Escola
-    Polit?cnica da Universidade
-    de S?o Paulo como requisito
-    para obten??o do T?tulo de
+    Tese apresentada à Escola
+    Politécnica da Universidade
+    de São Paulo como requisito
+    para obtenção do Título de
     \mbox{Livre}-Docente junto ao
     \PoliDepartamentoData.}%
   \orientador[~]{}%
 }
 
 \newcommand{\memorialLD}{%
-  \renewcommand{\PoliTipoDocData}{Memorial (Livre Doc?ncia)}
+  \renewcommand{\PoliTipoDocData}{Memorial (Livre Docência)}
   \comentario{\vspace{1.0cm}
-    Texto apresentado ? Escola
-    Polit?cnica da Universidade
-    de S?o Paulo como requisito
-    para obten??o do T?tulo de
+    Texto apresentado à Escola
+    Politécnica da Universidade
+    de São Paulo como requisito
+    para obtenção do Título de
     \mbox{Livre}-Docente junto ao
     \PoliDepartamentoData.}%
   \orientador[~]{}%
 }
 
 
-% Ficha catalogr?fica
+% Ficha catalográfica
 % ------------------------
 \usepackage{lastpage}
 
@@ -1964,7 +1958,7 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
 \newcommand{\PoliAutorIniciaisMaisSobrenome}{}
 
 \newcommand{\PoliRefFichaCatalografica}{%
-  \PoliTipoDocData~ --- Escola Polit?cnica da Universidade de S?o Paulo.
+  \PoliTipoDocData~ --- Escola Politécnica da Universidade de São Paulo.
   \PoliDepartamentoData.}
 
 \newcommand{\PoliFichaCatalograficaData}{}
@@ -1973,7 +1967,7 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
 \setboolean{PoliRevisao}{false}
 \newcommand{\PoliEdicaoRevisadaData}{-- ed.~rev. --}
 \newcommand{\PoliDataDaRevisao}{\today}
-\newcommand{\PoliQuadroDeRevisaoData}{Este exemplar foi revisado e alterado em rela??o ? vers?o original, sob responsabilidade ?nica do autor e com a anu?ncia de seu orientador.}
+\newcommand{\PoliQuadroDeRevisaoData}{Este exemplar foi revisado e alterado em relação à versão original, sob responsabilidade única do autor e com a anuência de seu orientador.}
 \newcommand{\PoliAssinaturaAutor}{Assinatura do autor}
 \newcommand{\PoliAssinaturaOrientador}{Assinatura do orientador}
 
@@ -2015,7 +2009,7 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
   
 \begin{center}
 %\hspace{2.7cm}%
-\textbf{\textsf{\uppercase{Ficha Catalogr?fica}}}
+\textbf{\textsf{\uppercase{Ficha Catalográfica}}}
 \end{center}
 \begin{flushleft}
 %\hspace{-1.5cm}
@@ -2106,8 +2100,8 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
   {\end{espacosimples}\newpage}%resumo
 
 
-%%%%%%%%%%%   r?sum?  %%%%%%%%%%%
-% Ambiente para R?sum?. O mesmo efeito do abstract, mas em franc?s.
+%%%%%%%%%%%   résumé  %%%%%%%%%%%
+% Ambiente para Résumé. O mesmo efeito do abstract, mas em francês.
 %
 \newcommand{\resumename}{R\'esum\'e}
 \newenvironment{resume}%
@@ -2116,11 +2110,11 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
    \otherheadtrue\pretextualchapter{\resumename}%
    \begin{espacosimples}%
   }%
-  {\end{espacosimples}\newpage}%r?sum?
+  {\end{espacosimples}\newpage}%résumé
 
 
 %%%%%%%%%%%   Zusammenfassung  %%%%%%%%%%%
-% Ambiente para Zusammenfassung. O mesmo efeito do abstract, mas em alem?o.
+% Ambiente para Zusammenfassung. O mesmo efeito do abstract, mas em alemão.
 %
 \newcommand{\zusammenfassungname}{Zusammenfassung}
 \newenvironment{zusammenfassung}%

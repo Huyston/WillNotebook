@@ -103,17 +103,22 @@ class WillNotebook(object):
             if content['type'] == 'image':
                 filename = content['img']
                 os.remove(os.getcwd()+'/Archieves/'+docID+'/Images/'+filename)
+                content = content['caption']+content['source']
         elif startWith('!ref',content):
             print('Deleting the refCell')
             self.references[docID]['refCell'] = ''
             self.references[docID]['serverRefCell'] = ''
         changedRefs = False
-        if '\cite{' in content:
+        if '\cite{' in content or '\citeonline{' in content:
             print('Counts: ',self.references[docID]['counts'])
             citations = getAllInside('\cite{','}',content)
+            citations.update(getAllInside('\citeonline{','}',content))
             for citation in citations:
                 print('Citation deletion: ', citation)
-                citationList = getInside('\cite{','}',citation).split(',')
+                if '\cite{' in citation:
+                    citationList = getInside('\cite{','}',citation).split(',')
+                elif '\citeonline{' in citation:
+                    citationList = getInside('\citeonline{','}',citation).split(',')
                 for individual in citationList:
                     self.references[docID]['counts'][individual] -= content.count(citation)
                     if self.references[docID]['counts'][individual] == 0:
@@ -123,6 +128,9 @@ class WillNotebook(object):
                             del self.references[docID]['keys'][citation]
                         changedRefs = True
                         print('Citation removed')
+        else:
+            print('No citation in this cell')
+        self.updateRefCell(docID)
         refUpdate = ''
         if changedRefs:
             self.makeReferences(docID)
@@ -133,102 +141,37 @@ class WillNotebook(object):
         return refUpdate+'Cell deleted'
 
     @cherrypy.expose
-    def evalCell(self,docID,cell,content):
+    def evalCell(self,docID,cell,outIndex,content):
         cell = int(cell)
         print(cell)
-        changedCitations = False
         if cell == len(self.archive[docID]['page']):
             self.archive[docID]['page'].append({'content':content,'output':'.'})
-        else:
-            ### Existing cell ###
-            ### Check if there was any citation and if it changed ###
-            citations = getAllInside('\cite{','}',content)
-            if not citations:
-                if 'citations' in self.archive[docID]['page'][cell]:
-                    changedCitations = True
-                    for citation in self.archive[docID]['page'][cell]['citations']:
-                        n = self.archive[docID]['page'][cell]['citations'][citation]
-                        citationList = getInside('\cite{','}',citation).split(',')
-                        for individual in citationList:
-                            self.references[docID]['counts'][individual] -= n
-                            print('Citation '+individual+' was removed from content')
-                            if self.references[docID]['counts'][individual] == 0:
-                                del self.references[docID]['counts'][individual]
-                                print('No more citation '+citation+' in document. Deleting...')
-                                if citation in self.references[docID]['keys']:
-                                    del self.references[docID]['keys'][citation]
-                    del self.archive[docID]['page'][cell]['citations']
-            else:
-                if 'citations' in self.archive[docID]['page'][cell]:
-                    cellCitations = [i for i in self.archive[docID]['page'][cell]['citations'].keys()]
-                    for citation in cellCitations:
-                        if not citation in citations:
-                            print('Removing citation from counters')
-                            n = self.archive[docID]['page'][cell]['citations'][citation]
-                            citationList = getInside('\cite{','}',citation).split(',')
-                            for individual in citationList:
-                                self.references[docID]['counts'][individual] -= n
-                                if self.references[docID]['counts'][individual] == 0:
-                                    changedCitations = True
-                                    del self.references[docID]['counts'][individual]
-                                    if citation in self.archive[docID]['page'][cell]['citations']:
-                                        del self.archive[docID]['page'][cell]['citations'][citation]
-                                    if citation in self.references[docID]['keys']:
-                                        del self.references[docID]['keys'][citation]
-                        else:
-                            print('Updating citation counters')
-                            oldN = self.archive[docID]['page'][cell]['citations'][citation]
-                            citationList = getInside('\cite{','}',citation).split(',')
-                            for individual in citationList:
-                                self.references[docID]['counts'][individual] -= oldN
-        refUpdate = ''
-        if changedCitations:
-            if self.references[docID]['refCell']:
-                self.makeReferences(docID)
-                refUpdate = '!@StartRef@!cell="'+str(self.references[docID]['refCell'])+'"'+self.handleReferences(docID)+'!@EndRef@!'
         self.archive[docID]['page'][cell]['content'] = content
-        if startWith('#code',content):
-            output = self.handlePythonCode(docID,content)
-            ## {{}} soh nao sera avaliado em #code
+        refUpdate,content = self.handleText(docID,cell,content)
+        if startWith('!#',content):
+            output = self.handleSections(content)
+        elif startWith('!eq',content):
+            output = self.handleEquations(content)
+        elif startWith('!title',content):
+            output = self.handleTitle(content)
+        elif content == '!ref':
+            output = self.handleReferences(docID,cell=outIndex)
+        elif startWith('!tab',content):
+            output = self.handleTables(content)
+        elif startWith('!-',content):
+            output = self.handleBullets(content)
+        elif startWith('!keyfor',content):
+            output = self.handleBibKeySearch(docID,content)
+        elif startWith('!addref',content):
+            output = self.handleInsertBibEntry(docID,content)
+        elif startWith('!delref',content):
+            output = self.handleDeleteBibEntry(docID,content)
+        elif startWith('!infofor',content):
+            output = self.handleInfoForBibEntry(docID,content)
+        elif startWith('!todo',content):
+            output = self.handleTODO(content)
         else:
-            if '{{' in content and '}}' in content:
-                content = self.handleValues(docID,content)
-            ## Order is important here, first the ***
-            if '***' in content:
-                print('BoldItalic parts')
-                content = self.handleBoldItalics(content)
-            if '**' in content:
-                print('Bold parts')
-                content = self.handleBold(content)
-            if '*' in content:
-                print('Italic parts')
-                content = self.handleItalics(content)
-            if '\cite{' in content and '}' in content:
-                content = self.handleCitations(docID,cell,content)
-            if startWith('!#',content):
-                output = self.handleSections(content)
-            elif startWith('!eq',content):
-                output = self.handleEquations(content)
-            elif startWith('!title',content):
-                output = self.handleTitle(content)
-            elif startWith('!ref',content):
-                output = self.handleReferences(docID,cell=cell)
-            elif startWith('!tab',content):
-                output = self.handleTables(content)
-            elif startWith('!-',content):
-                output = self.handleBullets(content)
-            elif startWith('!keyfor',content):
-                output = self.handleBibKeySearch(docID,content)
-            elif startWith('!addref',content):
-                output = self.handleInsertBibEntry(docID,content)
-            elif startWith('!delref',content):
-                output = self.handleDeleteBibEntry(docID,content)
-            elif startWith('!infofor',content):
-                output = self.handleInfoForBibEntry(docID,content)
-            elif startWith('!todo',content):
-                output = self.handleTODO(content)
-            else:
-                output = content
+            output = content
         if emptyLine(output):
             output = self.emptyLineSymbol
         if not '!@StartRef@!' in content[:12]:
@@ -244,15 +187,114 @@ class WillNotebook(object):
             self.archive[docID]['page'][cell]['output'] = storeOutput
         else:
             self.archive[docID]['page'][cell]['output'] = output
-        #print('References now: ',self.references[docID]['References'].encode('utf8'))
-        ## Update refcell content ##
+        self.updateRefCell(docID)
+        return output
+
+    def updateRefCell(self,docID):
         if self.references[docID]['refCell']:
             for n in range(len(self.archive[docID]['page'])):
                 if self.archive[docID]['page'][n]['content'] == '!ref':
                     refCell = n
             self.references[docID]['serverRefCell'] = refCell
             self.archive[docID]['page'][refCell]['output'] = '<h1>References</h1>\n'+self.references[docID]['References']
-        return output
+
+    def handleText(self,docID,cell,content):
+        ### Existing cell ###
+        ### Check if there was any citation and if it changed ###
+        changedCitations = False
+        citations = getAllInside('\cite{','}',content)
+        citations.update(getAllInside('\citeonline{','}',content))
+        if not citations:
+            if 'citations' in self.archive[docID]['page'][cell]:
+                changedCitations = True
+                for citation in self.archive[docID]['page'][cell]['citations']:
+                    n = self.archive[docID]['page'][cell]['citations'][citation]
+                    if '\cite{' in citation:
+                        citationList = getInside('\cite{','}',citation).split(',')
+                    elif '\citeonline{' in citation:
+                        citationList = getInside('\citeonline{','}',citation).split(',')
+                    for individual in citationList:
+                        self.references[docID]['counts'][individual] -= n
+                        print('Citation '+individual+' was removed from content')
+                        if self.references[docID]['counts'][individual] == 0:
+                            del self.references[docID]['counts'][individual]
+                            print('No more citation '+citation+' in document. Deleting...')
+                            if citation in self.references[docID]['keys']:
+                                del self.references[docID]['keys'][citation]
+                del self.archive[docID]['page'][cell]['citations']
+        else:
+            if 'citations' in self.archive[docID]['page'][cell]:
+                cellCitations = [i for i in self.archive[docID]['page'][cell]['citations'].keys()]
+                for citation in cellCitations:
+                    if not citation in citations:
+                        print('Removing citation from counters')
+                        n = self.archive[docID]['page'][cell]['citations'][citation]
+                        if '\cite{' in citation:
+                            citationList = getInside('\cite{','}',citation).split(',')
+                        elif '\citeonline{' in citation:
+                            citationList = getInside('\citeonline{','}',citation).split(',')
+                        for individual in citationList:
+                            self.references[docID]['counts'][individual] -= n
+                            if self.references[docID]['counts'][individual] == 0:
+                                changedCitations = True
+                                del self.references[docID]['counts'][individual]
+                                if citation in self.archive[docID]['page'][cell]['citations']:
+                                    del self.archive[docID]['page'][cell]['citations'][citation]
+                                if citation in self.references[docID]['keys']:
+                                    del self.references[docID]['keys'][citation]
+                    else:
+                        print('Updating citation counters')
+                        oldN = self.archive[docID]['page'][cell]['citations'][citation]
+                        if '\cite{' in citation:
+                            citationList = getInside('\cite{','}',citation).split(',')
+                        elif '\citeonline{' in citation:
+                            citationList = getInside('\citeonline{','}',citation).split(',')
+                        for individual in citationList:
+                            self.references[docID]['counts'][individual] -= oldN
+        refUpdate = ''
+        if changedCitations:
+            if self.references[docID]['refCell']:
+                self.makeReferences(docID)
+                refUpdate = '!@StartRef@!cell="'+str(self.references[docID]['refCell'])+'"'+self.handleReferences(docID)+'!@EndRef@!'
+        if startWith('#code',content):
+            content = self.handlePythonCode(docID,content)
+            ## {{}} soh nao sera avaliado em #code
+        else:
+            if '{{' in content and '}}' in content:
+                content = self.handleValues(docID,content)
+            ## Order is important here, first the ***
+            if '***' in content:
+                print('BoldItalic parts')
+                content = self.handleBoldItalics(content)
+            if '**' in content:
+                print('Bold parts')
+                content = self.handleBold(content)
+            if '*' in content:
+                print('Italic parts')
+                content = self.handleItalics(content)
+            if ('\cite{' in content or '\citeonline{' in content) and '}' in content:
+                content = self.handleCitations(docID,cell,content)
+        self.updateRefCell(docID)
+        return refUpdate, content
+
+    def renderText(self,docID,content):
+            if '{{' in content and '}}' in content:
+                content = self.handleValues(docID,content)
+            ## Order is important here, first the ***
+            if '***' in content:
+                print('BoldItalic parts')
+                content = self.handleBoldItalics(content)
+            if '**' in content:
+                print('Bold parts')
+                content = self.handleBold(content)
+            if '*' in content:
+                print('Italic parts')
+                content = self.handleItalics(content)
+            if '\cite{' in content and '}' in content:
+                toCitate = getAllInside('\cite{','}',content)
+                for citation in toCitate:
+                    content = content.replace(citation,self.references[docID]['keys'][citation])    
+            return content
 
     def handlePythonCode(self,docID,content):
         with Capturing() as output:
@@ -389,6 +431,7 @@ class WillNotebook(object):
     def handleCitations(self,docID,cell,content):
         print('Citations working')
         toCitate = getAllInside('\cite{','}',content)
+        toCitate.update(getAllInside('\citeonline{','}',content))
         print('Citation list: ',toCitate)
         ## Check if there is a new citation
         changed = False
@@ -398,7 +441,10 @@ class WillNotebook(object):
                     self.archive[docID]['page'][cell]['citations'] = {}
                 self.references[docID]['keys'][citation] = ''
                 self.archive[docID]['page'][cell]['citations'][citation] = content.count(citation)
-                citationList = getInside('\cite{','}',citation).split(',')
+                if '\cite{' in citation:
+                    citationList = getInside('\cite{','}',citation).split(',')
+                elif '\citeonline{' in citation:
+                    citationList = getInside('\citeonline{','}',citation).split(',')
                 for individual in citationList:
                     if not individual in self.references[docID]['counts']:
                         self.references[docID]['counts'][individual] = 0
@@ -407,7 +453,10 @@ class WillNotebook(object):
                 print('NEW REF ADDED')
             else:
                 print('Adding')
-                citationList = getInside('\cite{','}',citation).split(',')
+                if '\cite{' in citation:
+                    citationList = getInside('\cite{','}',citation).split(',')
+                elif '\citeonline{' in citation:
+                    citationList = getInside('\citeonline{','}',citation).split(',')
                 for individual in citationList:
                     if not individual in self.references[docID]['counts']:
                         self.references[docID]['counts'][individual] = 0
@@ -424,6 +473,7 @@ class WillNotebook(object):
 
     def handleReferences(self,docID,cell=None):
         if cell:
+            print('RefCell is ',cell)
             self.references[docID]['refCell'] = cell
         output = '<h1>References</h1>\n'
         output += self.references[docID]['References']
@@ -453,15 +503,25 @@ class WillNotebook(object):
 
     def handleEquations(self,content):
         eqContent = ''
+        nonNumbered = False
         for line in content.split('\n'):
-            if '!eq' in line:
-                label = line.replace('!eq ','')
+            if '!eq*' in line:
+                label = line.replace('!eq*','').strip()
+                nonNumbered = True
+            elif '!eq' in line:
+                label = line.replace('!eq','').strip()
             else:
                 eqContent += line
-        eq = '\\begin{equation}'
+        if nonNumbered:
+            eq = '\\begin{equation*}'
+        else:
+            eq = '\\begin{equation}'
         if label.replace('<label>',''):
             eq += '\label{'+label+'}\n'
-        eq += eqContent+'\end{equation}'
+        if nonNumbered:
+            eq += eqContent+'\end{equation*}'
+        else:
+            eq += eqContent+'\end{equation}'
         return eq
 
     def handleTitle(self,content):
@@ -519,7 +579,7 @@ class WillNotebook(object):
         return keys
 
     def handleInsertBibEntry(self,docID,bibText):
-        bibText = bibText.replace('!addref ','').strip()
+        bibText = bibText.replace('!addref','').strip()
         key = self.getBibKeys(docID,bibText=bibText)
         if key:
             key = key[0]
@@ -533,7 +593,7 @@ class WillNotebook(object):
             return error('Woops! This is not a valid bibtex entry.')
 
     def handleDeleteBibEntry(self,docID,bibKey):
-        bibKey = bibKey.replace('!delref ','').strip()
+        bibKey = bibKey.replace('!delref','').strip()
         if bibKey in self.getBibKeys(docID):
             entry = self.getBibKeys(docID,getInfo=True)[bibKey].strip()+'\n\n'
             with open(os.getcwd()+'/Archieves/'+docID+'/database.bib','r',encoding='utf8') as bib:
@@ -546,7 +606,7 @@ class WillNotebook(object):
             return error('Woops! This key is not in the database.')
     
     def handleInfoForBibEntry(self,docID,bibKey):
-        bibKey = bibKey.replace('!infofor ','').strip()
+        bibKey = bibKey.replace('!infofor','').strip()
         if bibKey in self.getBibKeys(docID):
             entry = self.getBibKeys(docID,getInfo=True)[bibKey].strip()+'\n\n'
             return msg(entry)
@@ -569,14 +629,17 @@ class WillNotebook(object):
             except FileExistsError:
                 pass
             i = open(os.getcwd()+'/Archieves/'+docID+'/Images/'+filename,'wb')
-            while True:
-                data = img.file.read(4096)
-                if not data:
-                    break
-                else:
-                    i.write(data)
-                print('Loading...')
-            i.close()
+            try:
+                while True:
+                    data = img.file.read(4096)
+                    if not data:
+                        break
+                    else:
+                        i.write(data)
+                    print('Loading...')
+                i.close()
+            except AttributeError:
+                print('Using cached image')
         cell = int(cell)
         imgWidth = str(int(float(width)*800.0))+'px'
         if not type(img) == str:
@@ -593,7 +656,6 @@ class WillNotebook(object):
                     self.archive[docID]['page'].append({'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':output})
                 return output
             print('Its update. Using filename: ',filename)
-
         if cell == len(self.archive[docID]['page']):
             self.archive[docID]['page'].append({'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':'.'})
             loadImg(filename)
@@ -620,23 +682,32 @@ class WillNotebook(object):
                     return '<font class="dontprint" color="red">Warning, no image was inserted. Please try again.</font>'
                     
                 self.archive[docID]['page'][cell] = {'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':'.'}
+        _,handledCaption = self.handleText(docID,cell,caption) # handle caption, will mess refUpdate
+        _,handledSource = self.handleText(docID,cell,source) # handle source, will mess refUpdate
+        refUpdate,_ = self.handleText(docID,cell,caption+source) # handle refUpdate
+        caption = handledCaption # restoring caption
+        source = handledSource # restoring source
         if label:
             output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>Source: '+source+'</center><br>'
         else:
             output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>Source: '+source+'</center><br>'
         self.archive[docID]['page'][cell]['output'] = output
-        return output.replace('@$docID$@',docID)
+        return refUpdate+output.replace('@$docID$@',docID)
 
     def handleTables(self,content):
         table = '<center><table>'
         caption = ''
+        source = ''
         label = ''
         for row in content.split('\n'):
             if '!tab' in row:
                 label = row.replace('!tab ','')
             elif not '|' in row:
                 if row:
-                    caption = '<div class="tableCaption" id="'+label+'">'+row+'</div>'
+                    if not caption:
+                        caption = '<div class="tableCaption" id="'+label+'">'+row+'</div>'
+                    else:
+                        source = row
             elif '||' in row:
                 headings = row.split('||')
                 table += '<tr>\n'
@@ -650,7 +721,10 @@ class WillNotebook(object):
                     table += '<td>'+col+'</td>'
                 table += '</tr>'
             table += '\n'
-        table += '</table></center>\n'
+        if not source:
+            table += '</table></center>\n'
+        else:
+            table += '</table><br>Source: '+source+'</center>\n'
         return caption+table
 
     def handleBullets(self,content):
@@ -727,7 +801,7 @@ class WillNotebook(object):
         for cell in self.archive[docID]['page']:
             content = cell['content']
             show = True
-            if '<h' in cell['output']:
+            if '<h' in cell['output'] and not '!ref' in content:
                 for level in range(1,6):
                     n = str(level)
                     if '<h'+n in cell['output']:
@@ -753,6 +827,8 @@ class WillNotebook(object):
                     caption = content['caption']
                     source = content['source']
                     label = content['label']
+                    source = self.renderText(docID,source)
+                    caption = self.renderText(docID,caption)
                     width = str(float(content['width'].replace('px',''))/800)
                     print('On main.py image width is ',width)
                     exporter.addFigure(img,caption,source=source,label=label,width=width)
@@ -767,10 +843,11 @@ class WillNotebook(object):
                     if '!tab' in row:
                         label = row.replace('!tab ','')
                     elif not '|' in row:
-                        if '!source ' in row:
-                            source = row.replace('!source ','')
                         if row:
-                            caption = row
+                            if not caption:
+                                caption = row
+                            else:
+                                source = row
                     else:
                         table += row+'\n'
                 exporter.addTable(table,caption,label,source)
@@ -806,9 +883,11 @@ class WillNotebook(object):
             elif '!- ' in content.lower():
                 topic = cell['output'].replace('<li>','').replace('</li>','').strip()
                 exporter.addBullet(topic)
+            elif '!ref' in content:
+                exporter.addReferences(cell['output'])
             else:
                 if show:
-                    exporter.addText(cell['output'])
+                    exporter.addText(content,cell['output'])
 
         print('ta no close')
         exporter.close()
@@ -882,8 +961,9 @@ class WillNotebook(object):
                     source = stuff['content']['source']
                     caption = stuff['content']['caption']
                     width = stuff['content']['width']
+                    widthValue = str(float(width.replace('px',''))/800)
 
-                    notebook += '<center id="c'+str(cell)+'"><form id="F'+str(cell)+'" enctype="multipart/form-data" method="POST" action="image" style="display: none;"><input type="file" name="img" value="Archieves/'+docID+'/Images/'+img+'" id="'+str(cell)+'" style="display: none;"><br>Label:<input name="label" value="'+label+'" id="L'+str(cell)+'"><br>Caption:<input name="caption" value="'+caption+'" id="C'+str(cell)+'"><br>Source:<input name="source" value="'+source+'" id="S'+str(cell)+'"><br>Width:<input id="SL'+str(cell)+'"name="width" type="range" min="0" max="1" step="0.01" value="'+width.replace('px','')+'"><br><img id="P'+str(cell)+'" src="Archieves/'+docID+'/Images/'+img+'" style="width:'+width+'"></form></center>'
+                    notebook += '<center id="c'+str(cell)+'"><form id="F'+str(cell)+'" enctype="multipart/form-data" method="POST" action="image" style="display: none;"><input type="file" name="img" value="Archieves/'+docID+'/Images/'+img+'" id="'+str(cell)+'" style="display: none;"><br>Label:<input name="label" value="'+label+'" id="L'+str(cell)+'"><br>Caption:<input name="caption" value="'+caption+'" id="C'+str(cell)+'"><br>Source:<input name="source" value="'+source+'" id="S'+str(cell)+'"><br>Width:<input id="SL'+str(cell)+'"name="width" type="range" min="0" max="1" step="0.01" value="'+widthValue+'"><br><img id="P'+str(cell)+'" src="Archieves/'+docID+'/Images/'+img+'" style="width:'+width+'"></form></center>'
                     output = stuff['output'].replace('@$docID$@',docID)
                     notebook += '<center tabindex="0" id="co'+str(cell)+'"><div id="o'+str(cell)+'" class="paragraph">'+output+'</div></center>'
             else:

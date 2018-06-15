@@ -456,8 +456,16 @@ def receiveImg(req):
     # Receiving the server handler output as req.text
     global outIndex
     print('Receiving img...')
+    print(req)
     try:
         print('Receiving...',outIndex)
+        if req[:12] == '!@StartRef@!' and '!@EndRef@!' in req:
+            ref = getInside('!@StartRef@!','!@EndRef@!',req)
+            req = req.text.replace('!@StartRef@!'+ref+'!@EndRef@!','')
+            refCell = getInside('cell="','"',ref)
+            ref = ref.replace('cell="'+refCell+'"','')
+            if refCell:
+                document['o'+refCell].innerHTML =  ref
         document['o'+outIndex].innerHTML = req
         updateFigureNumbers()
         updateTableNumbers()
@@ -472,7 +480,7 @@ def send(content):
     req.bind('complete',receive)
     req.open('POST','http://127.0.0.1:8080/evalCell',True)
     req.set_header('content-type','application/x-www-form-urlencoded')
-    req.send({'docID':window.docID,'cell':page.index(outIndex),'content':content})
+    req.send({'docID':window.docID,'cell':page.index(outIndex),'outIndex':outIndex,'content':content})
 
 def sendImg(img,label,source,caption,width):
     print('Sending img...')
@@ -500,21 +508,19 @@ def sendDeleteCell(index):
 
 def ack(req):
     print('ACKasd: ',req.text)
-    try:
-        if '!@StartRef@!' in req.text and '!@EndRef@!' in req.text:
-            ref = getInside('!@StartRef@!','!@EndRef@!',req.text)
-            req.text = req.text.replace('!@StartRef@!'+ref+'!@EndRef@!','')
-            refCell = getInside('cell="','"',ref)
-            ref = ref.replace('cell="'+refCell+'"','')
-            if refCell:
-                document['o'+refCell].innerHTML =  ref
+    if '!@StartRef@!' in req.text and '!@EndRef@!' in req.text:
+        ref = getInside('!@StartRef@!','!@EndRef@!',req.text)
+        req.text = req.text.replace('!@StartRef@!'+ref+'!@EndRef@!','')
+        refCell = getInside('cell="','"',ref)
+        ref = ref.replace('cell="'+refCell+'"','')
+        if refCell:
+            document['o'+refCell].innerHTML =  ref
+    if not req.text == 'Cell inserted':
         updateSectionNumbers()
         updateFigureNumbers()
         updateTableNumbers()
         handleReferences() # this order is important. If it comes after mathjax, the \ref command gets evalluated by it first
         window.math.reNumber()
-    except:
-        pass
 
 def renderFile(req):
     global page,cellCounter
