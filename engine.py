@@ -607,7 +607,7 @@ def updateSectionNumbers():
     for id in page:
         html = document['o'+id].html
         if html:
-            if '<h1' in html:
+            if '<h1' in html and not 'class="abstract"' in html:
                 S+=1
                 SS,SSS,SSSS,SSSSS = 0,0,0,0
                 if 'id="' in html:

@@ -170,6 +170,10 @@ class WillNotebook(object):
             output = self.handleInfoForBibEntry(docID,content)
         elif startWith('!todo',content):
             output = self.handleTODO(content)
+        elif startWith('!resumo',content):
+            output = self.handleAbstracts(docID,'Resumo',content)
+        elif startWith('!abstract',content):
+            output = self.handleAbstracts(docID,'Abstract',content)
         else:
             output = content
         if emptyLine(output):
@@ -730,6 +734,21 @@ class WillNotebook(object):
     def handleBullets(self,content):
         return '<li>'+content.replace('!- ','').replace('!-','')+'</li>'
 
+    def handleAbstracts(self,docID,title,content):
+        ''' Doesn't count citations '''
+        abstract = '<h1 class="abstract">'+title+'</h1>'
+        blankLine = False
+        content = content.replace('!'+title.lower(),'')
+        for line in content.split('\n'):
+            if line:
+                abstract += '<br>'+self.renderText(docID,line)
+                blankLine = False
+            else:
+                if not blankLine:
+                    abstract += '<br>'
+                    blankLine = True
+        return abstract
+
     @cherrypy.expose
     def saveFile(self,docID,filename,extension,model):
         if extension == 'will':
@@ -801,7 +820,7 @@ class WillNotebook(object):
         for cell in self.archive[docID]['page']:
             content = cell['content']
             show = True
-            if '<h' in cell['output'] and not '!ref' in content:
+            if '<h' in cell['output'] and not '!ref' in content and not 'class="abstract"' in cell['output']:
                 for level in range(1,6):
                     n = str(level)
                     if '<h'+n in cell['output']:
@@ -885,6 +904,10 @@ class WillNotebook(object):
                 exporter.addBullet(topic)
             elif '!ref' in content:
                 exporter.addReferences(cell['output'])
+            elif '!resumo' in content:
+                exporter.addAbstracts('Resumo',cell['output'])
+            elif '!abstract' in content:
+                exporter.addAbstracts('Abstract',cell['output'])
             else:
                 if show:
                     exporter.addText(content,cell['output'])

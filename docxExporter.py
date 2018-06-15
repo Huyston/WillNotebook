@@ -316,6 +316,10 @@ class DocxExporter():
         for ref in refs:
             self.addText(refs)
 
+    def addAbstracts(self,title,content):
+        self.addHeading(title,0,title)
+        self.addText(content)
+
     def close(self):
         self.document.save(os.getcwd()+'/Archieves/'+self.docID+'/'+self.filename+'.docx')
 
