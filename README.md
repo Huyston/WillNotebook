@@ -17,6 +17,8 @@ WillNotebook is inspired by jupyter (notebook) project, but aims the specifics o
 - Reference equations, sections and figures with automatic numbering
 - Automatic citation handling using .bib (using latex)
 - Automatic References creation (using latex)
+- Create tables
+- Create bullet point lists
 
 ## Export formats
 
@@ -58,7 +60,7 @@ Ubuntu
 ```
 ArchLinux
 ```bash
-# pacman -S texlive
+# pacman -S texlive-most
 ```
 # Start the server
 Download all the files and run the server "main.py". After this, visit "127.0.0.1:8080" on your browser and have fun :)
