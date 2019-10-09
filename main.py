@@ -13,10 +13,6 @@ try:
 except:
     print('No sympy installed')
 
-def section(text):
-    '''This is a test notebook python function'''
-    print("<h1>"+text+"</h1>")
-
 def msg(msg):
     return '<font class="msg dontprint">'+msg+'</font>'
 
@@ -83,9 +79,14 @@ class WillNotebook(object):
         notebook = notebook.read().replace('!@docID@!',docID)
         #The globals can be used to perform Python default functions for WillNotebook
         #It is ignored in the save state, so only locals is saved in the document
-        self.archive[docID] = {'Globals':{'section':section},'Locals':{},'page':[],'references':None}
+        self.archive[docID] = {'Globals':{'docID':docID},'Locals':{},'page':[],'references':None}
         self.references[docID] = {'keys':{},'counts':{},'References':'','refCell':''}
+        self.loadDefaultFuncs()
         return notebook
+
+    def loadDefaultFuncs(self):
+        with open('defaultFunctions.py','r') as funcs:
+            self.defaultFuncs = funcs.read()
 
     @cherrypy.expose
     def newCell(self,docID,index):
@@ -299,7 +300,7 @@ class WillNotebook(object):
     def handlePythonCode(self,docID,content):
         with Capturing() as output:
             try:
-                exec(content,self.archive[docID]['Globals'],self.archive[docID]['Locals'])
+                exec(self.defaultFuncs+content,self.archive[docID]['Globals'])#,self.archive[docID]['Locals'])
             except Exception as e:
                 print('Exception: ', e)
         if output == []:
@@ -310,8 +311,7 @@ class WillNotebook(object):
                     break
             return '<font class="dontprint" color="green">[code]'+label+'</font>'
         else:
-            # Retorna o primeiro indice da lista (str)
-            return output[0]
+            return '<br>'.join(output)
 
     def handleValues(self,docID,content):
         toEvaluate = getAllInside('{{','}}',content)
@@ -947,7 +947,7 @@ class WillNotebook(object):
             self.references[docID]['refCell'] = self.references[docID]['serverRefCell']
         else:
             self.references[docID]['refCell'] = None
-        self.archive[docID]['Globals'] = {'section':section}
+        self.archive[docID]['Globals'] = {'docID':docID}
         archive.close()
         notebook = ''
         for cell,stuff in enumerate(self.archive[docID]['page']):
