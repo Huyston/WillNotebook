@@ -6,7 +6,7 @@
 
 WillNotebook is inspired by jupyter (notebook) project, but aims the specifics of academic writing. The idea is to merge the advantages and functionalities of Word, Latex and Python together into one powerful and hackable software.
 
-## What can I do with WillNotebook
+## What can I do with WillNotebook?
 
 - Add titles, subtitles, etc
 - Add normal, bold, italic and both bold and italic text
@@ -17,6 +17,8 @@ WillNotebook is inspired by jupyter (notebook) project, but aims the specifics o
 - Reference equations, sections and figures with automatic numbering
 - Automatic citation handling using .bib (using latex)
 - Automatic References creation (using latex)
+- Create tables
+- Create bullet point lists
 
 ## Export formats
 
@@ -27,11 +29,11 @@ The default format is ".will" and it is the recommended format for holding all t
 - .pdf (from pdflatex)
 - .pdf (from WillNotebook browser printing)
 
-## How is it different from Jupyter Notebook
+## How is it different from Jupyter Notebook?
 
 It is focused on academic writting. And so it provides an automatic section numbering, equation numbering, referencing system, figure with captions and sources and it is more clean and readable (like a report or a paper with hidden code).
 
-## How to use it
+## How to use it?
 
 ### Dependencies
 
@@ -58,7 +60,7 @@ Ubuntu
 ```
 ArchLinux
 ```bash
-# pacman -S texlive
+# pacman -S texlive-most
 ```
 # Start the server
 Download all the files and run the server "main.py". After this, visit "127.0.0.1:8080" on your browser and have fun :)
