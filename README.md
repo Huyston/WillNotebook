@@ -19,6 +19,7 @@ WillNotebook is inspired by jupyter (notebook) project, but aims the specifics o
 - Automatic References creation (using latex)
 - Create tables
 - Create bullet point lists
+- Plots using matplotlib
 
 ## Export formats
 
