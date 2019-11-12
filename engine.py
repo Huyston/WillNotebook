@@ -444,6 +444,7 @@ def receive(req):
                     document['o'+refCell].innerHTML =  ref
             document['o'+outIndex].innerHTML =  req.text
             updateSectionNumbers()
+            updateFigureNumbers()
             updateTableNumbers()
             handleReferences()
             window.math.reNumber()

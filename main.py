@@ -258,7 +258,7 @@ class WillNotebook(object):
                 self.makeReferences(docID)
                 refUpdate = '!@StartRef@!cell="'+str(self.references[docID]['refCell'])+'"'+self.handleReferences(docID)+'!@EndRef@!'
         if startWith('#code',content):
-            content = self.handlePythonCode(docID,content)
+            content = self.handlePythonCode(docID,cell,content)
             ## {{}} soh nao sera avaliado em #code
         else:
             if '{{' in content and '}}' in content:
@@ -297,9 +297,12 @@ class WillNotebook(object):
                     content = content.replace(citation,self.references[docID]['keys'][citation])    
             return content
 
-    def handlePythonCode(self,docID,content):
+    def handlePythonCode(self,docID,cell,content):
         with Capturing() as output:
             try:
+                if 'matplotlib' in content and 'savefig' in content:
+                    #Its a plot! Parse the imagename and treat it like an image
+                    return self.handlePlot(docID, cell, content)
                 exec(self.defaultFuncs+content,self.archive[docID]['Globals'])#,self.archive[docID]['Locals'])
             except Exception as e:
                 print('Exception: ', e)
@@ -313,6 +316,50 @@ class WillNotebook(object):
         else:
             return '<br>'.join(output)
 
+    def handlePlot(self,docID,cell,content):
+        plotArgs = getInside('savefig(',')',content)
+        f = 'def getName(*args,**kwargs):\n    return args[0]\n_internalPlotName = getName('+plotArgs+')'
+        g = {}
+        exec(f,g)
+        filename = eval('_internalPlotName',g)
+        label = ''
+        source = ''
+        caption = 'Testing plot'
+        imgWidth = '800px'
+        code = ''
+        try:
+            os.mkdir(os.getcwd()+'/Archieves/'+docID)
+        except FileExistsError:
+            pass
+        try:
+            os.mkdir(os.getcwd()+'/Archieves/'+docID+'/Images')
+        except FileExistsError:
+            pass
+        for line in content.split('\n'):
+            if '#code' in line:
+                label = line.replace('#code ','')
+            elif 'savefig' in line:
+                line = line.replace('savefig(',f'savefig(os.getcwd()+"/Archieves/{docID}/Images/{filename}",discard=')
+                code += line+'\n'
+            else:
+                code += line+'\n'
+        print(code)
+
+        exec(self.defaultFuncs+code,self.archive[docID]['Globals'])#,self.archive[docID]['Locals'])
+
+        _,handledCaption = self.handleText(docID,cell,caption) # handle caption, will mess refUpdate
+        _,handledSource = self.handleText(docID,cell,source) # handle source, will mess refUpdate
+        refUpdate,_ = self.handleText(docID,cell,caption+source) # handle refUpdate
+        caption = handledCaption # restoring caption
+        source = handledSource # restoring source
+        if label:
+            output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+        else:
+            output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+        self.archive[docID]['page'][cell] = {'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':'.'}
+        self.archive[docID]['page'][cell]['output'] = output
+        return refUpdate+output.replace('@$docID$@',docID)
+        
     def handleValues(self,docID,content):
         toEvaluate = getAllInside('{{','}}',content)
         for expr in toEvaluate:
