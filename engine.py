@@ -456,6 +456,7 @@ def receive(req):
             if '\\eq{' in req.text or '\\begin{equation}' in req.text or '\\begin{*equation}' in req.text:
                 print('Tem math')
                 window.math.reNumber()
+
             #window.MathJax.Hub.Queue(["Typeset",window.MathJax.Hub])
             print('o'+outIndex)
     except Exception as e:

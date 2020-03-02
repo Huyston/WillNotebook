@@ -13,10 +13,6 @@ try:
 except:
     print('No sympy installed')
 
-def section(text):
-    '''This is a test notebook python function'''
-    print("<h1>"+text+"</h1>")
-
 def msg(msg):
     return '<font class="msg dontprint">'+msg+'</font>'
 
@@ -83,9 +79,14 @@ class WillNotebook(object):
         notebook = notebook.read().replace('!@docID@!',docID)
         #The globals can be used to perform Python default functions for WillNotebook
         #It is ignored in the save state, so only locals is saved in the document
-        self.archive[docID] = {'Globals':{'section':section},'Locals':{},'page':[],'references':None}
+        self.archive[docID] = {'Globals':{'docID':docID},'Locals':{},'page':[],'references':None}
         self.references[docID] = {'keys':{},'counts':{},'References':'','refCell':''}
+        self.loadDefaultFuncs()
         return notebook
+
+    def loadDefaultFuncs(self):
+        with open('defaultFunctions.py','r') as funcs:
+            self.defaultFuncs = funcs.read()
 
     @cherrypy.expose
     def newCell(self,docID,index):
@@ -261,7 +262,7 @@ class WillNotebook(object):
                 self.makeReferences(docID)
                 refUpdate = '!@StartRef@!cell="'+str(self.references[docID]['refCell'])+'"'+self.handleReferences(docID)+'!@EndRef@!'
         if startWith('#code',content):
-            content = self.handlePythonCode(docID,content)
+            content = self.handlePythonCode(docID,cell,content)
             ## {{}} soh nao sera avaliado em #code
         else:
             if '{{' in content and '}}' in content:
@@ -300,10 +301,13 @@ class WillNotebook(object):
                     content = content.replace(citation,self.references[docID]['keys'][citation])    
             return content
 
-    def handlePythonCode(self,docID,content):
+    def handlePythonCode(self,docID,cell,content):
         with Capturing() as output:
             try:
-                exec(content,self.archive[docID]['Globals'],self.archive[docID]['Locals'])
+                if 'matplotlib' in content and 'savefig' in content:
+                    #Its a plot! Parse the imagename and treat it like an image
+                    return self.handlePlot(docID, cell, content)
+                exec(self.defaultFuncs+content,self.archive[docID]['Globals'])#,self.archive[docID]['Locals'])
             except Exception as e:
                 print('Exception: ', e)
         if output == []:
@@ -314,9 +318,52 @@ class WillNotebook(object):
                     break
             return '<font class="dontprint" color="green">[code]'+label+'</font>'
         else:
-            # Retorna o primeiro indice da lista (str)
-            return output[0]
+            return '<br>'.join(output)
 
+    def handlePlot(self,docID,cell,content):
+        plotArgs = getInside('savefig(',')',content)
+        f = 'def getName(*args,**kwargs):\n    return args[0]\n_internalPlotName = getName('+plotArgs+')'
+        g = {}
+        exec(f,g)
+        filename = eval('_internalPlotName',g)
+        label = ''
+        source = ''
+        caption = 'Testing plot'
+        imgWidth = '800px'
+        code = ''
+        try:
+            os.mkdir(os.getcwd()+'/Archieves/'+docID)
+        except FileExistsError:
+            pass
+        try:
+            os.mkdir(os.getcwd()+'/Archieves/'+docID+'/Images')
+        except FileExistsError:
+            pass
+        for line in content.split('\n'):
+            if '#code' in line:
+                label = line.replace('#code ','')
+            elif 'savefig' in line:
+                line = line.replace('savefig(',f'savefig(os.getcwd()+"/Archieves/{docID}/Images/{filename}",discard=')
+                code += line+'\n'
+            else:
+                code += line+'\n'
+        print(code)
+
+        exec(self.defaultFuncs+code,self.archive[docID]['Globals'])#,self.archive[docID]['Locals'])
+
+        _,handledCaption = self.handleText(docID,cell,caption) # handle caption, will mess refUpdate
+        _,handledSource = self.handleText(docID,cell,source) # handle source, will mess refUpdate
+        refUpdate,_ = self.handleText(docID,cell,caption+source) # handle refUpdate
+        caption = handledCaption # restoring caption
+        source = handledSource # restoring source
+        if label:
+            output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+        else:
+            output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+        self.archive[docID]['page'][cell] = {'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':'.'}
+        self.archive[docID]['page'][cell]['output'] = output
+        return refUpdate+output.replace('@$docID$@',docID)
+        
     def handleValues(self,docID,content):
         toEvaluate = getAllInside('{{','}}',content)
         for expr in toEvaluate:
@@ -970,7 +1017,7 @@ class WillNotebook(object):
             self.references[docID]['refCell'] = self.references[docID]['serverRefCell']
         else:
             self.references[docID]['refCell'] = None
-        self.archive[docID]['Globals'] = {'section':section}
+        self.archive[docID]['Globals'] = {'docID':docID}
         archive.close()
         notebook = ''
         for cell,stuff in enumerate(self.archive[docID]['page']):

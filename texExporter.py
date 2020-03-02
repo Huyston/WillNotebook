@@ -109,13 +109,21 @@ class TexExporter():
         citations = getAllInside('\cite{','}',source)
         for cite in citations:
             source = source.replace(cite,'\\protect'+cite)
-        figure = '''\\begin{figure}[!h]
-\centering
-\caption{'''+caption+'''}
-\includegraphics[width='''+width+'''\\textwidth]{Images/'''+img+'''}
-\label{'''+label+'''}
-\caption*{Source: '''+source+'''}
-\end{figure}'''
+        if source:
+            figure = '''\\begin{figure}[!h]
+    \centering
+    \caption{'''+caption+'''}
+    \includegraphics[width='''+width+'''\\textwidth]{Images/'''+img+'''}
+    \label{'''+label+'''}
+    \caption*{Source: '''+source+'''}
+    \end{figure}'''
+        else:
+            figure = '''\\begin{figure}[!h]
+    \centering
+    \caption{'''+caption+'''}
+    \includegraphics[width='''+width+'''\\textwidth]{Images/'''+img+'''}
+    \label{'''+label+'''}
+    \end{figure}'''
         self.document.write(figure+'\n\n')
 
     def addTable(self,table,caption,label='',source=''):
@@ -171,6 +179,8 @@ class TexExporter():
             firstNames = ' '.join(names[:-1])
             lastName = names[-1]
             self.document.write('\\autorPoli{'+firstNames+'}{}{}{}{'+lastName+'}\n')
+        else:
+            self.document.write('\\author{'+author+'}\n')
 
     def addAdvisor(self,advisor):
         if self.docType == 'abntepusp':
@@ -223,6 +233,8 @@ class TexExporter():
 
     def addReferences(self,refs):
         self.document.write('\\newpage\n')
+        if not self.docType == 'abntepusp':
+            self.document.write('\\bibliographystyle{plain}\n\n')
         self.document.write('\\bibliography{database}\n\n')
 
     def addAbstracts(self,title,content):
