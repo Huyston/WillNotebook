@@ -237,6 +237,14 @@ class TexExporter():
             self.document.write('\\bibliographystyle{plain}\n\n')
         self.document.write('\\bibliography{database}\n\n')
 
+    def addAbstracts(self,title,content):
+        content = content.replace('<br>','\n')
+        content = content.replace('<h1 class="abstract">'+title+'</h1>','')
+        title = title.lower()
+        self.document.write('\\begin{'+title+'}\n\n')
+        self.document.write(self.formatText(content.replace('!'+title,'')))
+        self.document.write('\\end{'+title+'}\n\n')
+
     def close(self):
         self.document.write('\\end{document}')
         self.document.close()
