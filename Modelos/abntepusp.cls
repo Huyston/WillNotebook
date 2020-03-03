@@ -1925,10 +1925,10 @@ Para mais informacoes, leia o manual da classe.\MessageBreak%
 \newcommand{\teseDr}[1]{%
   \renewcommand{\PoliTipoDocData}{Tese (Doutorado)}
   \comentario{\vspace{1.0cm}
-    Tese apresentada ? Escola
-    Polit?cnica da Universidade de
-    S?o Paulo para obten??o do
-    T?tulo de Doutor em #1.}%
+    Thesis presented to Polytechnic
+    School of São Paulo University
+    to obtain the title of
+    Doctor of Science.}%
 }
 
 \newcommand{\teseLD}{%
