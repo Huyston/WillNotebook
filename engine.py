@@ -51,7 +51,7 @@ def shortcuts(ev):
     elif ev.altKey and ev.which == 67:
         handleInAltC(id)
         ev.returnValue = False
-    elif ev.altKey and ev.which == 69:
+    elif ev.altKey and ev.which == 69 or ev.ctrlKey and ev.which == 81:
         handleInAltE(id)
         ev.returnValue = False
     elif ev.altKey and ev.which == 49:
@@ -69,7 +69,7 @@ def shortcuts(ev):
     elif ev.altKey and ev.which == 53:
         handleInAlt5(id)
         ev.returnValue = False
-    elif ev.altKey and ev.which == 73:
+    elif ev.altKey and ev.which == 73 or ev.ctrlKey and ev.which == 73:
         handleInAltI(id)
         ev.returnValue = False
     elif ev.altKey and ev.which == 84:
