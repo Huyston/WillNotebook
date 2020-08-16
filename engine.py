@@ -28,12 +28,13 @@ def getInside(first,last,content):
 
 def shortcuts(ev):
     id = document.activeElement.id
+    print(ev.which)
     if ev.shiftKey and ev.which == 13:
         handleShiftEnter(id)
         ev.returnValue = False
     elif ev.which == 13:
         handleInEnter(id)
-    elif ev.shiftKey and ev.which == 46:
+    elif ev.shiftKey and ev.which == 46 or ev.shiftKey and ev.which == 8:
         handleShiftDelete(id)
         ev.returnValue = False
     elif ev.altKey and ev.which == 78:
