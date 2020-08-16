@@ -356,10 +356,12 @@ class WillNotebook(object):
         refUpdate,_ = self.handleText(docID,cell,caption+source) # handle refUpdate
         caption = handledCaption # restoring caption
         source = handledSource # restoring source
+        if source:
+            source = 'Source: '+ source
         if label:
-            output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+            output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>'+source+'</center><br>'
         else:
-            output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+            output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>'+source+'</center><br>'
         self.archive[docID]['page'][cell] = {'content':{'type':'image','img':filename,'label':label,'source':source,'caption':caption,'width':imgWidth},'output':'.'}
         self.archive[docID]['page'][cell]['output'] = output
         return refUpdate+output.replace('@$docID$@',docID)
@@ -738,10 +740,12 @@ class WillNotebook(object):
         refUpdate,_ = self.handleText(docID,cell,caption+source) # handle refUpdate
         caption = handledCaption # restoring caption
         source = handledSource # restoring source
+        if source:
+            source = 'Source: '+source
         if label:
-            output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+            output = '<br><center><figcaption id="'+label+'">'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>'+source+'</center><br>'
         else:
-            output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>Source: '+source+'</center><br>'
+            output = '<br><center><figcaption>'+caption+'</figcaption>'+'<img style="width:'+imgWidth+'" src="Archieves/@$docID$@/Images/'+filename+'"><br>'+source+'</center><br>'
         self.archive[docID]['page'][cell]['output'] = output
         return refUpdate+output.replace('@$docID$@',docID)
 
